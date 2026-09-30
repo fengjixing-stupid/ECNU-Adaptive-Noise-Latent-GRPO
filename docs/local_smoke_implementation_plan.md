@@ -1,13 +1,13 @@
 ---
 id: DOC-PLAN-001
 type: design
-status: proposed
+status: active
 title: 本地 Smoke 与 Kaggle Notebook 实现计划
 created: 2026-09-30
 updated: 2026-09-30
 related_docs:
   - DOC-SPEC-001
-  - DOC-AUDIT-001
+  - DOC-MINFIX-001
   - DOC-POLICY-001
   - DOC-AGENT-001
 planned_code:
@@ -22,13 +22,15 @@ planned_code:
 
 > 执行者：采用 superpowers:executing-plans 逐任务实施。已读 [子 Agent 协议](AGENT_USE.md)，本轮零子 Agent。后续只有清晰独立任务或有价值的独立审查才派发，明确文件所有权；根 Agent 集成、复核并维护 progress。
 
+本地 CPU smoke 范围已获用户确认（2026-09-30）；此 active 状态只表示本地工程执行获准。Kaggle 数据规模、特征和训练/评估决策仍是待讨论的实验方案，执行前与用户交流。
+
 **Goal:** 本地 CPU 验证原始 sampler 数学契约，Kaggle baseline 通过后再实现并验证 Noise Head，Kaggle Notebook 验证真实 1B latent 推理并执行公平对比。
 
 **Architecture:** 一个纯 PyTorch adaptive_noise 包用于 CPU 与 CUDA；作者固定版本提供实际 latent inference。主项目维护可核验的源码补丁，不直接把作者整个 CUDA/verl 依赖栈安装到本地。Notebook 仅调用同一组 CLI，负责资源探测、输入挂载和阶段门禁。
 
 **Tech Stack:** 本地现有 Python/PyTorch/pytest；Kaggle 单 GPU 自定义 SGLang、离线训练用 PyTorch、结果用 JSONL/Parquet。新增依赖在实施时明确版本与用途，不自动安装。
 
-**Spec:** [任务规范](AdaNoise_LGRPO_Codex_Kaggle_Spec.md)；[当前版本审计](adanoise_repo_audit.md)。返回 [文档索引](README.md)。
+**Spec:** [任务规范](AdaNoise_LGRPO_Codex_Kaggle_Spec.md)；[当前 minfix 审计](minfix_submodule_update.md)。返回 [文档索引](README.md)。
 
 ## 1. 当前边界与前置条件
 
@@ -66,11 +68,11 @@ K<2、非有限概率、无效步号或 shape 不一致都抛项目配置错误�
 原版固定路径使用第一行 scale；所以旧版 identity 仅在所有请求 scale、temperature 相同的原作者语义下逐张量核对。
 新版 fixed 按请求 [B,1] scale 应用；异构 batch 对每行独立参考路径核对，明确这是原作者首行广播问题的修复。
 仅 adaptive 生效请求进入 head；请求 entropy/step 状态以 request id 存储并随 filter/merge/reset 更新，完成和取消请求清理。
-保留原有 clamp、one-sided、top-p 保底 K、Gumbel temperature、524 mask、latent/explicit 切换及所有随机抽样顺序。
+保留 minfix 的8192 chunk及随机调用顺序、原有 clamp、one-sided、top-p 保底 K、Gumbel temperature、配置化 latent_end_token_id mask、latent/explicit 切换及所有随机抽样顺序。
 
 ### 2.3 可复现源码组织
 
-主项目 submodule 固定作者 commit e70deb8ee1a9dc8908ee473f7cafb1e01fd0de93。
+主项目 submodule 固定用户修订 commit `0b7e85f15e9859033653964282348e518f9f6291`，路径 `latent_grpo_minfix/Latent-GRPO-final/`；源码在其 `Latent-GRPO/` 子目录。
 实施时创建 patches/sglang_adanoise.patch 和 scripts/prepare_upstream.py；在 artifacts/upstream/ 复制需要的上游工作树、校验版本并应用补丁，原参考 checkout 保持干净。
 Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补丁和主项目包；manifest 记录主项目 commit、上游 commit、patch SHA256。不能假定离线 Notebook 能访问 submodule URL。
 
@@ -90,11 +92,11 @@ Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补�
 
 **Files:** tests/reference_fixed_sampler.py、tests/test_fixed_mode_identity.py、adaptive_noise/sampling_kernel.py、scripts/smoke_local.py、configs/local_smoke.yaml。
 **Interfaces:** sample_latent_kernel(logits:[B,V], fixed_scales:[B,1], top_p:[B,1], K:int, gumbel_temperature:float, one_sided:[B,1], active_mask:[B], gumbels=None) → indices:[B,K], probs:[B,K], next_latent_id:[B]。
-参考函数从锁定源码抽取数学路径，独立保存并注明来源；不导入 SGLang engine、Ray、verl 或 CUDA kernels。
+参考函数从锁定 minfix `_streaming_latent_noisy_topk` 抽取数学路径，独立保存并注明来源；不导入 SGLang engine、Ray、verl 或 CUDA kernels。
 
-- [ ] 先写测试：B=1/3、V=32、K=10、seed=0/1/2、one-sided 两种、top-p=.2/.95；同一 RNG 初态下 reference 与 kernel 的 indices、probs、latent id 相等。
-- [ ] 验证 active/nonlatent/524 mask，scale=0 消去噪声且保持原 top-K 概率；full vocabulary 噪声可改变候选集合。
-- [ ] 实现 kernel 与 smoke CLI；训练/采样共用生产 kernel，Kaggle patched sampler 接入此函数，避免本地与真实路径各写一份算法。
+- [ ] 先写测试：B=1/3、V=32、K=10、seed=0/1/2、one-sided 两种、top-p=.2/.95，另覆盖V=8192/8205边界；同一分块 RNG 初态下 minfix reference 与 kernel 的 indices、probs、latent id 相等。
+- [ ] 验证 active/nonlatent/配置化 latent_end_token_id mask，scale=0 消去噪声且保持原 top-K 概率；full vocabulary 噪声可改变候选集合。
+- [ ] 实现8192分块 kernel 与 smoke CLI；测试确认noisy workspace不恢复为[B,V]；生产采样共用该 kernel，Kaggle patched sampler 接入此函数，避免本地与真实路径各写一份算法。
 - [ ] 执行 `python -m pytest tests/test_fixed_mode_identity.py -q`；通过后生成 artifacts/local_smoke.json，schema_version=1、scope=tensor_only、device=cpu、seed、版本、case 名称和 pass/fail、runtime_sec。
 - [ ] 提交此任务明确文件；运行测试失败即不进入下一任务。
 
@@ -107,7 +109,7 @@ Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补�
 
 - [ ] Notebook 首 cell 检查 GPU、显存、torch/CUDA/依赖版本与输入路径，写 artifacts/environment.json；失败立即终止后续 cells，禁止自动安装补救。
 - [ ] 先运行未启用 head 的 frozen baseline：1题、1 rollout、batch=1、max_running_requests=1、tp=1、max_new_tokens=64、top_k=10、response temperature=.6、top_p=.95、Gumbel temp=1、scale=1、one-sided=True；bf16 支持由硬件检测，明确记录实际 dtype，否则选择兼容 fp16，不能执行失败后再降级。
-- [ ] 验证 prompt 以 `<think>` 进入 latent；核验 tokenizer 的 `</think>` id 与524 mask一致；输出至少1个 latent step、hidden 非空 [B,d]、有限统计。未进入 latent 的普通生成视为 smoke 失败。
+- [ ] 验证 prompt 以 `<think>` 进入 latent；核验 tokenizer 的 `</think>` id 与配置化 latent_end_token_id mask一致；输出至少1个 latent step、hidden 非空 [B,d]、有限统计。未进入 latent 的普通生成视为 smoke 失败。
 - [ ] 两次相同输入/seed 的 baseline 输出一致；显式固定 sampling seed，验证实际 worker 使用的 seed，不仅设置 Notebook 父进程 RNG。
 - [ ] 保存 smoke_test.json：output_text、num_latent_steps、peak_gpu_memory_mb、runtime_sec、method、hidden probe、baseline 复现证据和失败类别；shutdown engine 后提交。
 
@@ -185,6 +187,7 @@ python scripts/evaluate_paired.py --platform kaggle --config configs/adanoise_ka
 - [x] 定义本地张量 smoke 和 Kaggle 真实 inference 的证据边界。
 - [x] 明确特征、冻结、scale、原始 identity、Stage A 和公平比较契约。
 - [x] 已补读 docs/AGENT_USE.md；按委派门禁确定顺序执行和零子 Agent。
-- [ ] 用户审阅 proposed 计划；真实模型步骤前提供 checkpoint/data 路径。
+- [x] 用户确认本地 CPU smoke 范围；实验设计在执行前与用户交流。
+- [ ] 真实模型步骤前提供 checkpoint/data 路径并确认实验方案。
 
-设计文档结构检查可验收；实施就绪门禁待用户审阅，真实模型执行还需 checkpoint/data 输入。未实现或运行的测试不标记为通过。
+本地 CPU smoke 已获准；真实模型执行仍需 checkpoint/data 输入，后续实验设计先与用户交流。未实现或运行的测试不标记为通过。

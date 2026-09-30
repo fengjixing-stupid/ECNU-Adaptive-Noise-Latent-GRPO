@@ -1,21 +1,19 @@
 ---
 id: DOC-AUDIT-001
 type: testing
-status: active
+status: archived
 title: AdaNoise-LGRPO 源码审计
 created: 2026-09-30
 updated: 2026-09-30
 related_docs:
   - DOC-SPEC-001
-related_code:
-  - Latent-GRPO/sglang_latent_reasoning_pkg/python/sglang/srt/layers/sampler.py
-  - Latent-GRPO/sglang_latent_reasoning_pkg/python/sglang/srt/sampling/sampling_batch_info.py
-  - Latent-GRPO/sglang_latent_reasoning_pkg/python/sglang/srt/layers/logits_processor.py
 ---
 # AdaNoise-LGRPO 源码审计
 
 返回 [文档索引](README.md)。证据版本：作者仓库 `e70deb8ee1a9dc8908ee473f7cafb1e01fd0de93`。
 本审计是静态源码取证，未执行模型推理。
+
+历史记录：用户已将旧 checkout 替换为 minfix。本文件保留旧版证据，不再作为当前 sampler 的实现依据；当前来源见 [minfix 接入审计](minfix_submodule_update.md)。
 
 ## 1. 已确认调用链
 
