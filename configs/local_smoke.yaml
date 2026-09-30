@@ -1,0 +1,4 @@
+# Fixed engineering cases; no checkpoint, dataset, model loading, or training.
+upstream_path: latent_grpo_minfix/Latent-GRPO-final
+upstream_commit: 0b7e85f15e9859033653964282348e518f9f6291
+output_dir: artifacts

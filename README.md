@@ -2,7 +2,7 @@
 
 冻结作者 1B Latent-GRPO backbone，训练轻量 Noise Head，比较固定与逐 latent step 自适应 Gumbel scale。
 
-当前阶段（2026-09-30）：本地 CPU smoke 范围已确认；尚未实现或运行模型实验。
+当前阶段（2026-09-30）：本地 CPU sampler smoke 已实现并通过；尚未运行真实模型实验。
 
 1. 从 [项目入口](AGENTS.md) 读取规则。
 2. 查看 [文档索引](docs/README.md)。
@@ -12,3 +12,11 @@
 ```sh
 git clone --recurse-submodules https://github.com/fengjixing-stupid/ECNU-Adaptive-Noise-Latent-GRPO.git
 ```
+
+本地验证：
+```sh
+python -m pytest -q
+python scripts/smoke_local.py --config configs/local_smoke.yaml --device cpu
+```
+结果和边界见 [CPU smoke 验收](docs/local_cpu_smoke.md)。
+第三方许可见 [Third-party notices](THIRD_PARTY_NOTICES.md)。

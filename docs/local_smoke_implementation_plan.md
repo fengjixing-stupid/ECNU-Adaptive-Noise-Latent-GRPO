@@ -34,7 +34,7 @@ planned_code:
 
 ## 1. 当前边界与前置条件
 
-本轮交付设计，不执行模型加载、训练、数据下载或 Kaggle 任务。以下 CLI 和代码文件均是待实现接口。
+Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md)。其余任务仍是待实现接口；本轮不执行模型加载、训练、数据下载或Kaggle任务。
 
 | 阶段 | 做什么 | 可证明什么 |
 | --- | --- | --- |
@@ -80,9 +80,9 @@ Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补�
 
 | 失败输入/条件 | 验收证据 | 归属 |
 | --- | --- | --- |
-| raw/noisy p 混用造成循环 | 相同 raw logits、改变噪声时特征不变 | Task 2 |
+| raw/noisy p 混用造成循环 | 相同 raw logits、改变噪声时特征不变 | Task 3 |
 | 请求 filter/merge 后串行号 | 重排、完成、取消后逐请求 H_prev/t 不串线 | Task 3 |
-| backbone/projection 梯度边界错 | backbone 无 grad，projection/MLP 有有限非零 grad | Task 2 |
+| backbone/projection 梯度边界错 | backbone 无 grad，projection/MLP 有有限非零 grad | Task 3 |
 | 停止/取消/断点造成重复结果 | resume key 去重，manifest 不匹配拒绝恢复 | Task 4 |
 | 训练/validation/test 或增强题泄漏 | parent id 分组切分、test 标签禁止被 selection 消费 | Task 4/5 |
 
@@ -91,14 +91,14 @@ Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补�
 ### Task 1 — 固定 sampler 参考与本地 smoke 入口（约 2–3 小时）
 
 **Files:** tests/reference_fixed_sampler.py、tests/test_fixed_mode_identity.py、adaptive_noise/sampling_kernel.py、scripts/smoke_local.py、configs/local_smoke.yaml。
-**Interfaces:** sample_latent_kernel(logits:[B,V], fixed_scales:[B,1], top_p:[B,1], K:int, gumbel_temperature:float, one_sided:[B,1], active_mask:[B], gumbels=None) → indices:[B,K], probs:[B,K], next_latent_id:[B]。
+**Interfaces:** sample_latent_kernel(logits:[B,V], fixed_scales:[B,1], top_p:[B,1], K:int, gumbel_temperature:float, one_sided:[B,1], active_mask:[B], gumbels=None, latent_end_token_id:int) → indices:[B,K], probs:[B,K], next_latent_id:[B]。
 参考函数从锁定 minfix `_streaming_latent_noisy_topk` 抽取数学路径，独立保存并注明来源；不导入 SGLang engine、Ray、verl 或 CUDA kernels。
 
-- [ ] 先写测试：B=1/3、V=32、K=10、seed=0/1/2、one-sided 两种、top-p=.2/.95，另覆盖V=8192/8205边界；同一分块 RNG 初态下 minfix reference 与 kernel 的 indices、probs、latent id 相等。
-- [ ] 验证 active/nonlatent/配置化 latent_end_token_id mask，scale=0 消去噪声且保持原 top-K 概率；full vocabulary 噪声可改变候选集合。
-- [ ] 实现8192分块 kernel 与 smoke CLI；测试确认noisy workspace不恢复为[B,V]；生产采样共用该 kernel，Kaggle patched sampler 接入此函数，避免本地与真实路径各写一份算法。
-- [ ] 执行 `python -m pytest tests/test_fixed_mode_identity.py -q`；通过后生成 artifacts/local_smoke.json，schema_version=1、scope=tensor_only、device=cpu、seed、版本、case 名称和 pass/fail、runtime_sec。
-- [ ] 提交此任务明确文件；运行测试失败即不进入下一任务。
+- [x] 先写测试：B=1/3、V=32、K=10、seed=0/1/2、one-sided 两种、top-p=.2/.95，另覆盖V=8192/8205边界；同一分块 RNG 初态下 minfix reference 与 kernel 的 indices、probs、latent id 相等。
+- [x] 验证 active/nonlatent/配置化 latent_end_token_id mask，scale=0 消去噪声且保持原 top-K 概率；full vocabulary 噪声可改变候选集合。
+- [x] 实现8192分块 kernel 与 smoke CLI；测试确认noisy workspace不恢复为[B,V]；生产采样共用该 kernel，Kaggle patched sampler 接入此函数，避免本地与真实路径各写一份算法。
+- [x] 执行 `python -m pytest tests/test_fixed_mode_identity.py -q`；通过后生成 artifacts/local_smoke.json，schema_version=1、scope=tensor_only、device=cpu、seed、版本、case 名称和 pass/fail、runtime_sec。
+- [x] 提交此任务明确文件；运行测试失败即不进入下一任务。
 
 **Gate:** 单 CPU 小张量通过；不要求本地下载或加载 1B。预期 smoke 运行 10–60 秒，超时记录并排查，不能伪称通过。
 
@@ -190,4 +190,4 @@ python scripts/evaluate_paired.py --platform kaggle --config configs/adanoise_ka
 - [x] 用户确认本地 CPU smoke 范围；实验设计在执行前与用户交流。
 - [ ] 真实模型步骤前提供 checkpoint/data 路径并确认实验方案。
 
-本地 CPU smoke 已获准；真实模型执行仍需 checkpoint/data 输入，后续实验设计先与用户交流。未实现或运行的测试不标记为通过。
+本地 CPU smoke 已获准；真实模型执行仍需 checkpoint/data 输入，后续实验设计先与用户交流。Task 1已通过；未实现或运行的其余测试不标记为通过。

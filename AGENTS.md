@@ -1,7 +1,7 @@
 # AdaNoise-LGRPO 项目入口
 
 项目目标：在作者已训练的 1B Latent-GRPO checkpoint 上冻结 backbone，仅训练 Noise Head；主要实验使用 Kaggle 单 GPU Notebook。
-更新：2026-09-30；当前阶段：本地 CPU smoke 范围已获用户确认；smoke 脚本尚未实现。
+更新：2026-09-30；当前阶段：本地 CPU smoke 范围已获用户确认；Task 1 sampler smoke 已实现。
 
 ## 读取路线
 
@@ -11,7 +11,7 @@
 
 ## 工作边界
 
-- 当前任务将 minfix 设为新 submodule 并同步设计；本地 CPU smoke 范围已确认，实施按 [smoke 设计与计划](docs/local_smoke_implementation_plan.md) 的前置条件执行。
+- 本地 CPU sampler smoke 已实现；后续实施按 [smoke 设计与计划](docs/local_smoke_implementation_plan.md) 的前置条件执行。
 - 只比较 validation 选定的 Fixed-Gumbel 与 AdaNoise；禁止 backbone/LoRA/GRPO/PPO 训练。
 - 本地张量级 smoke 使用 CPU；真实 latent inference 先在 Kaggle 单 GPU smoke 验收。
 - 后续实验设计必须先与用户交流；不得根据工程判断静默修改实验方案。
@@ -29,6 +29,8 @@
 
 ```sh
 python /path/to/r-doc/scripts/audit_docs.py --root . --strict
-git diff --check -- AGENTS.md README.md docs .r-doc.yaml .gitignore .gitmodules
+python -m pytest -q
+python scripts/smoke_local.py --config configs/local_smoke.yaml --device cpu
+git diff --check -- AGENTS.md README.md docs adaptive_noise scripts tests configs
 ```
-`/path/to/r-doc` 替换为当前安装技能位置。smoke/Notebook 命令在计划中列为未来接口，当前不可执行。
+`/path/to/r-doc` 替换为当前安装技能位置。本地 smoke 使用说明见 [Task 1验收](docs/local_cpu_smoke.md)；Kaggle/Noise Head命令仍是待实现接口。
