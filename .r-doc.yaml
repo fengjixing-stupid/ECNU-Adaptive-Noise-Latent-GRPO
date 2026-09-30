@@ -1,0 +1,6 @@
+version: 1
+governance_level: standard
+docs_root: docs
+exclude:
+  - Latent-GRPO
+  - progress

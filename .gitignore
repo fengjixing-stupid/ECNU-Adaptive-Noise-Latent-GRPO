@@ -1,0 +1,17 @@
+# OS / Python generated files
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Local credentials and environments
+.env
+.env.*
+.venv/
+# Runtime inputs and outputs
+artifacts/
+models/
+checkpoints/
+data/
+*.safetensors
+*.pt
+*.pth

@@ -1,0 +1,3 @@
+[submodule "Latent-GRPO"]
+	path = Latent-GRPO
+	url = https://github.com/DJC-GO-SOLO/Latent-GRPO.git
