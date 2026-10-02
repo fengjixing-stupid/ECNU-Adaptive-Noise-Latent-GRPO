@@ -25,7 +25,7 @@ backbone两阶段始终冻结；不进行backbone反向传播，不训练LoRA，
 ## 2. 共享题目、独立轨迹
 
 两阶段使用同一份train题目及答案，复用相同problem_id和split manifest。
-Stage A使用固定scale生成的离线轨迹；Stage B使用当前head策略重新采样的on-policy轨迹。
+Stage A复用probing中每题最佳经验正确率scale的全部离线轨迹与输入特征（包含正确/错误轨迹，平手取较小scale）；其他scale保留探测摘要。Stage B使用当前head策略重新采样的on-policy轨迹。
 旧固定scale轨迹和旧head策略轨迹不能直接当作当前head的on-policy样本；策略版本改变后，按批准的采样/更新契约处理，不静默复用历史缓存。
 RL每步记录输入特征、实际动作/scale及行为策略身份和动作概率信息；每条轨迹记录最终答案、正确性、seed、rollout_id和终止状态。
 采样时backbone和hidden inputs不保留反向图；head的log probability必须具有针对head参数的可用梯度，不能把no_grad下导出的浮点log_prob直接用于反向传播。采用保留head图或按行为版本重算的方式，具体接口实施前确定。
@@ -37,6 +37,7 @@ RL每步记录输入特征、实际动作/scale及行为策略身份和动作概
 不重复审计语义重复及原题关系，因此只保证文件角色和记录 ID 的隔离，不宣称已验证语义去重或 checkpoint 历史训练污染。构建脚本设计见 [数据集构建设计](dataset_construction_design.md)。
 固定sweep的成功率可作粗略模型相对难度参考，不要求复杂难度分层、同prefix分支搜索或逐step oracle标签。
 最新用户决定：首轮S=[0,.25,.5,1,2]；s=0仅1次且不追加，非零scale累计3→5→7。train全错/全对剔除，有对有错且经验正确率极差>0.4保留；到7次仍≤0.4剔除并记录problem_id。剔除仅针对本轮训练选择，保留原始题目和候选清单。详见数据构建设计；替代此前全失败题暂不剔除的建议。
+validation保留全部80题，使用相同递增采样控制，标记all_correct/all_wrong/noise_sensitive/not_sensitive_at_cap，不按类别剔除。
 先锁定train/validation/test，再生成训练轨迹；train供两个训练阶段更新参数，validation只用于选择固定baseline scale、head checkpoint和超参数，test仅作最终评估。
 validation与test都不进入监督/策略梯度更新；两个指定测试文件不得参与训练池构建或参数选择；不据内部 extra_info.split 改变用户指定的文件角色。
 
@@ -53,6 +54,6 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
 | warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
 | RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
-| 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；模型rollout随机数安排、生成设置、validation probing预算及轨迹复用待确认 |
+| 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；生成设置沿用作者：GSM8K-Aug max_new_tokens=128，DAPO=4096；validation分类保留与最佳scale轨迹复用已确认；模型rollout随机数安排及invalid接口待确定 |
 
 本轮只记录批准的路线；不因确认路线就自动选择上述参数、下载安装依赖或启动实验。

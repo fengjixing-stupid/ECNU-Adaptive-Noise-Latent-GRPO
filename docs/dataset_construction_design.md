@@ -1,7 +1,7 @@
 ---
 id: DOC-DATA-001
 type: design
-status: proposed
+status: active
 title: 数据集构建脚本设计
 created: 2026-10-02
 updated: 2026-10-02
@@ -11,7 +11,7 @@ related_docs:
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置等模型实施参数尚待确认。本文设计脚本接口，尚未实现代码或运行模型。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout随机数安排及invalid接口仍待实施前明确。本文设计脚本接口，尚未实现代码或运行模型。
 
 ## 输入与目标
 
@@ -72,13 +72,13 @@ related_docs:
 | build_manifest.json | 输入哈希、构建配置、版本、PyArrow版本、实际统计与检查状态 |
 | rejected.parquet | 无效训练候选记录的位置和原因；不存模型 rollout |
 
-顺序固定为：基础检查 → 每来源抽样 → 来源内切分 → 锁定候选 split manifest → probing → 基本筛选 → 锁定最终 train selection。240:80 指 train/validation，不是两个现有测试集的规模。不能根据 probing 结果移动记录的 split 或重新切分。Stage A/B 复用同一份最终 train selection；validation 只用于选择，test 只用于最终评估。建议 validation 不按经验正确率筛掉难题，保留完整 80 题；该筛选细节尚待讨论。
+顺序固定为：基础检查 → 每来源抽样 → 来源内切分 → 锁定候选 split manifest → probing → 基本筛选 → 锁定最终 train selection。240:80 指 train/validation，不是两个现有测试集的规模。不能根据 probing 结果移动记录的 split 或重新切分。Stage A/B 复用同一份最终 train selection；validation 只用于选择，test 只用于最终评估。validation保留完整80题，按相同采样控制流程分类标记，任何类别均不剔除。
 
 ## 与模型阶段的连接
 
 本地构建仅操作数据，不加载 checkpoint、不生成 hidden、不估计成功率。模型路径已由用户提供：`/Users/fengjixing/Python_Project/models/LLaMA3.2-1B-Instruct-Latent-GRPO-Top10`；真实采集仍须先通过 Kaggle GPU baseline smoke。
 
-后续 `collect_fixed_sweep.py` 接受固定 train/validation selection，在批准的 scales 和 M 下记录最终正确性，计算每题每个 scale 的经验成功率。保存每题每个 scale 的成功数、完成 rollout 数及经验正确率 q_hat_i(s)，用于基本难度筛选和 warm-start 初始化；不要求细致难度分桶或同 prefix 搜索。probing 与 Stage A sweep 是否共用轨迹及采集配置尚未确定，不能自动重复采集，也不能未校验契约就宣称可复用。不回头修改 split；train 筛选按下节最新用户决定执行，替代此前不剔除全失败题的建议。筛选移出本轮训练题集，不删除原始数据。
+后续 `collect_fixed_sweep.py` 接受固定 train/validation selection，在批准的 scales 和 M 下记录最终正确性，计算每题每个 scale 的经验成功率。保存每题每个 scale 的成功数、完成 rollout 数及经验正确率 q_hat_i(s)，用于基本难度筛选和 warm-start 初始化；不要求细致难度分桶或同 prefix 搜索。probing与warm-start复用每题最佳scale的完整轨迹及输入特征；其余scale只永久保留探测摘要和轻量rollout结果，不重复进行完整sweep。不回头修改 split；train 筛选按下节最新用户决定执行，替代此前不剔除全失败题的建议。筛选移出本轮训练题集，不删除原始数据。
 
 两阶段优化只读取 train。Stage B 重新 rollout，不能复用 Stage A 轨迹作当前策略样本。测试文件不提供训练 scale 标签，不参与候选 scale、数据比例或 checkpoint 选择。
 
@@ -104,16 +104,41 @@ s=0 始终 M=1，在所有阶段、追加和恢复时均不得再请求本题的
 
 输出 `probe_rollouts.parquet`（problem_id、split、scale、rollout_id、seed、最终答案、reward、终止/invalid状态）、`probe_summary.parquet`（每 scale 的样本数/成功数/q_hat、delta、采样阶段）、`selection_decisions.parquet`（每题 problem_id、来源身份、原始行号、保留/剔除与原因），以及 `train_selected.parquet`。所有剔除题都保留可回查 ID，尤其 not_sensitive_at_cap；原始数据与320题候选清单不删除。可用 problem_id 关联候选清单恢复题目，或按输入文件哈希与 source_row 找回原始记录。
 
-环境、网络、设备故障或OOM立即停止，不生成奖励或筛选决定。validation 不进入训练筛选；完整80题保留，具体 validation probing 采样预算另行确定。两阶段仅使用 train_selected，RL重新生成当前策略轨迹。
+环境、网络、设备故障或OOM立即停止，不生成奖励或筛选决定。validation使用相同s=0一次、非零3→5→7的采样控制。完整阶段全对/全错分别标记all_correct/all_wrong并停止追加；delta>0.4标记noise_sensitive并停止；其余追加至7次后标记not_sensitive_at_cap。四种终态全部保留在80题validation中，不剔除、不进入train。两阶段仅使用 train_selected，RL重新生成当前策略轨迹。
 
-只对240个train候选按此规则 probing，首轮为3120条，全部追加到上限为6960条；实际通常介于两者之间。该计算不包含validation、Kaggle smoke及正式训练。GPU wall time须由实测吞吐估算。
+只对240个train候选按此规则 probing，首轮为3120条，全部追加到上限为6960条；实际通常介于两者之间。validation首轮1040条，上限2320条；320题合计首轮4160条，上限9280条。上述不包含Kaggle smoke及正式训练。GPU wall time须由实测吞吐估算。
+
+## 已确认轨迹保留与 warm-start 复用
+
+每题终态计算 `s_star=argmax_s q_hat_i(s)`，正确率并列时取较小scale。这里最大概率指经验最终答案正确率，不是token概率或单条轨迹的似然。
+
+最终仅保留s_star下全部已采样完整轨迹和逐latent step的warm-start输入特征；同时保留正确与错误轨迹，不按reward挑一条。非零s_star最多7条，s_star=0仅1条。每题的所有保留step使用同一个s_star监督标签，训练按题等权。训练只消费train_selected的保留轨迹；validation轨迹只用于验证，全对/全错时标签也按同样argmax和平手规则产生并保留分类标记。
+
+其他scale保留轻量probe_rollouts、每scale成功/完成次数、invalid统计、q_hat、seed与终止状态，便于计算delta和回查；不永久保存其hidden或完整逐步轨迹。采集期间要暂存候选scale的完整记录到CPU/磁盘，直到本题终态确定最佳scale后才发布保留轨迹，清理本次生成的其他临时特征；原始数据、候选清单、摘要及最终保留轨迹不删除。不在GPU累积历史，不保存完整中间词表。
+
+复用前验证feature schema、模型身份、prompt、生成配置及scale；必需特征或轨迹不完整时停止并报告，不把轻量摘要直接当warm-start样本。Stage B不复用这些离线轨迹作当前策略样本。
+
+## 已确认作者生成配置
+
+来源为固定minfix submodule中的 `Latent-GRPO/eval/eval_low_tasks_sglang.py`、`eval_high_tasks_sglang.py` 的parser与generate调用，README评测示例与其一致。用户确认DAPO使用高难度配置；Math-500最终评估同样使用作者高难度配置。
+
+| 数据来源 | 配置 | max_new_tokens |
+| --- | --- | ---: |
+| GSM8K-Aug及其test | 作者low任务配置 | 128 |
+| DAPO与Math-500-test | 作者high任务配置 | 4096 |
+
+共享值：temperature=0.6、top_p=0.95、max_topk=10、gumbel_softmax_temperature=1.0、use_one_sided_gumbel_noise=False。max_new_tokens是作者传给generate的生成预算；本轮不额外发明独立latent长度上限。explicit token采样沿用作者行为。
+
+probing显式启用add_noise_gumbel_softmax=True，noise_scale逐请求取批准的scale（包括0）。作者默认该开关False，sampler源码仅在True分支使用noise_scale；开关必须启用才能执行已批准的探测。其他生成语义沿用上述配置，不能因OOM或耗时自动改长度。多GPU数量、batch/request容量是执行资源配置，不直接照搬作者8GPU例子的数值到Kaggle。
 
 ## 待确认参数与验收
 
 首轮候选子池 320 题，两来源各 160；每来源先抽样再切分 120 train / 40 validation，合计 240:80。此前 90/10 的完整池切分建议，以及 256:64 子池分配建议均被本方案替代。1:1 是 probing 前的来源配比，不要求筛选后的训练题集仍为 1:1，也不以题源名称代替经验难度。
 
-待确认：模型rollout随机数安排、生成长度/explicit采样设置、invalid判定接口、validation probing预算、probing/sweep轨迹复用规则。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
+待确认：模型rollout随机数安排与invalid判定接口。生成配置、validation流程及最佳scale轨迹复用已确认。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
 
 实施验收覆盖：同文件/seed 切分可复现；train/validation/test 的记录 ID 隔离；两来源各抽160且各划120/40，probing前manifest已锁定，筛选不能移动split；原始 prompt 和答案逐项保留；重复题保留；Math-500 内部 train 标记不能进入训练；缺失输入、读文件异常及无效测试记录停止；Stage A/B 的 train selection 完全一致。使用合成小文件测试接口，再对真实文件仅运行 CPU 数据构建，产物不提交 Git。
 
 probing 控制器与筛选实现另新增 `adaptive_noise/probing.py`、`scripts/select_probe_dataset.py` 和 `tests/test_probing.py`。验收覆盖首轮13条、递增只加非零scale、s=0绝不追加、delta=0.4边界、全错/全对优先剔除、7次仍不敏感的ID回查、恢复不重复采样、未完成记录禁止筛选和错误不变成R=0。只用合成reward记录验证控制器，真实模型probing仍在Kaggle验收后进行。
+
+新增验收：validation四种终态均保留且仅标记；最佳scale按经验正确率选取、平手较小scale；只保留最佳scale全部轨迹且包含错误轨迹；其他scale摘要完整；缺失特征阻止warm-start；作者low/high生成配置按来源固定；probing实际启用噪声开关。
