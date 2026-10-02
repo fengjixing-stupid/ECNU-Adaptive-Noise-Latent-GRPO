@@ -20,4 +20,4 @@
 
 [已确认两阶段训练与共享题集](training_route.md)：Stage B纳入首版；两阶段共享train题目、分别生成轨迹，validation/test隔离。
 
-[数据集构建脚本设计](dataset_construction_design.md)：已确定题源与不再去重边界；切分与配比建议待确认，脚本尚未实现。
+[数据集构建脚本设计](dataset_construction_design.md)：首轮两来源各抽160题、合计240 train / 80 validation，固定切分后probing筛选；脚本尚未实现。

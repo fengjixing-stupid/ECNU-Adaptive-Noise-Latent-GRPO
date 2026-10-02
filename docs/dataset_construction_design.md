@@ -11,11 +11,11 @@ related_docs:
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确认输入和不再去重边界；切分、混合及采样参数尚待用户确认。本文设计脚本接口，尚未实现代码或运行模型。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。seed、scale、重复次数及筛选规则尚待确认。本文设计脚本接口，尚未实现代码或运行模型。
 
 ## 输入与目标
 
-输出两阶段共享的题目池和固定切分清单；Stage A 的 scale 标签由后续固定 sweep 生成，Stage B 使用同题的新 on-policy rollout。
+先输出候选子池和固定切分清单；随后由冻结 1B checkpoint 的 probing 估计经验正确率，按批准的基本筛选规则形成实验训练题集。Stage A/B 共享最终 train 题目，Stage B 使用同题的新 on-policy rollout。不能把候选子池直接称为最终训练集。
 
 | 文件（相对于 data/） | 用户指定角色 | 元数据记录数 |
 | --- | --- | ---: |
@@ -34,12 +34,12 @@ related_docs:
 
 新增 `scripts/build_dataset.py`、`adaptive_noise/dataset_builder.py`、`configs/dataset_build.yaml`、`tests/test_dataset_builder.py`；独立于作者 submodule，不修改其代码。
 
-拟定命令为 `python scripts/build_dataset.py --config configs/dataset_build.yaml`。配置显式指定四个文件、输出目录、切分 seed 与 validation_fraction；实验数值确认前不设置可执行默认值。缺失文件或必填配置立即失败，不自动下载或寻找替代文件。
+拟定命令为 `python scripts/build_dataset.py --config configs/dataset_build.yaml`。配置显式指定四个文件、输出目录、抽样与切分 seed、每来源候选题数和 train/validation 配额。首轮每来源 160 题，分为 120 train / 40 validation；尚未确认的 seed 不设置可执行默认值。缺失文件或必填配置立即失败，不自动下载或寻找替代文件。
 
 实现分为三个顺序步骤：
 
 1. 流式读取两个训练候选文件，验证 question 非空、prompt 为有效 role/content 消息、ground_truth 为非空字符串；保留消息边界、原始答案及 LaTeX，不改写 prompt、不凭长度或猜测难度删除题目。无效训练记录写入 rejected 清单并注明原因；结构不兼容或文件读取错误立即停止。测试记录不自动删除，遇到无效字段停止并报告。
-2. 按来源生成稳定行 ID 和 train/validation 切分。同配置、同文件与 seed 得到相同结果；先按每个来源分别进行 seeded permutation，再按显式 validation_fraction 分配，保持来源覆盖。指定测试文件直接复制为独立 test 分区，不从训练候选中再划出 test，不用内部 split 字段路由。
+2. 按来源生成稳定行 ID。先从 GSM8K-Aug 和 DAPO 的有效记录中分别无放回抽取 160 题，再分别以独立切分随机流划分 120 train / 40 validation；总计 240 train 候选、80 validation 候选。同文件、配置和 seed 得到相同抽样及切分结果。必须在模型 probing 之前写出并锁定 split manifest。指定测试文件直接复制为独立 test 分区，不从候选子池再划 test，不用内部 split 字段路由。
 3. 写出题目池、split manifest 与统计报告；先完成文件写入，再发布完成标记。已有输出目录拒绝覆盖，要求新的输出路径。只报告实际读取和筛选数量，不把文件元数据数量当作最终可用数量。
 
 基础字段检查并不证明所有答案可自动评分。保留原始 ground_truth 和 reward_model.style，后续使用统一的最终答案 verifier；不因 Math-500 包含符号答案而提前删题。verifier 未实现或不支持必需格式时，按缺失前置条件停止采集。
@@ -52,24 +52,26 @@ related_docs:
 
 | 产物 | 用途 |
 | --- | --- |
-| train.parquet / validation.parquet | 两个来源的全部有效候选题按固定切分分配 |
+| train.parquet / validation.parquet | 首轮抽取的候选子池按固定切分分配：240 / 80，尚未经过模型筛选 |
 | test_gsm8k_aug.parquet / test_math500.parquet | 保留全部指定测试记录，分来源报告结果 |
 | split_manifest.parquet | problem_id、来源、split，供两个训练阶段共享 |
 | build_manifest.json | 输入哈希、构建配置、版本、PyArrow版本、实际统计与检查状态 |
 | rejected.parquet | 无效训练候选记录的位置和原因；不存模型 rollout |
 
-完整池的切分与实验采样分开。后续按已确认预算，从 train/validation 中各自抽取无放回的运行题集，冻结 run selection manifest。Stage A/B 复用同一份 train selection；validation 只用于选择，test 只用于最终评估。训练 minibatch 配比不得改变既有 split。
+顺序固定为：基础检查 → 每来源抽样 → 来源内切分 → 锁定候选 split manifest → probing → 基本筛选 → 锁定最终 train selection。240:80 指 train/validation，不是两个现有测试集的规模。不能根据 probing 结果移动记录的 split 或重新切分。Stage A/B 复用同一份最终 train selection；validation 只用于选择，test 只用于最终评估。建议 validation 不按经验正确率筛掉难题，保留完整 80 题；该筛选细节尚待讨论。
 
 ## 与模型阶段的连接
 
 本地构建仅操作数据，不加载 checkpoint、不生成 hidden、不估计成功率。模型路径已由用户提供：`/Users/fengjixing/Python_Project/models/LLaMA3.2-1B-Instruct-Latent-GRPO-Top10`；真实采集仍须先通过 Kaggle GPU baseline smoke。
 
-后续 `collect_fixed_sweep.py` 接受固定 train/validation selection，在批准的 scales 和 M 下记录最终正确性，计算每题每个 scale 的经验成功率。其结果用于 warm-start 标签和粗略诊断，不回头修改 split，不按少量全失败结果永久剔除题目。采集预算与全失败标签处理在采集阶段另行确定。
+后续 `collect_fixed_sweep.py` 接受固定 train/validation selection，在批准的 scales 和 M 下记录最终正确性，计算每题每个 scale 的经验成功率。保存每题每个 scale 的成功数、完成 rollout 数及经验正确率 q_hat_i(s)，用于基本难度筛选和 warm-start 初始化；不要求细致难度分桶或同 prefix 搜索。probing 与 Stage A sweep 是否共用轨迹及采集配置尚未确定，不能自动重复采集，也不能未校验契约就宣称可复用。不回头修改 split，不按少量全失败结果永久剔除题目。筛选阈值、预算与全失败标签处理实施前另行确定。
 
 两阶段优化只读取 train。Stage B 重新 rollout，不能复用 Stage A 轨迹作当前策略样本。测试文件不提供训练 scale 标签，不参与候选 scale、数据比例或 checkpoint 选择。
 
 ## 待确认参数与验收
 
-建议分别从两个训练来源划出 10% validation，其余 90% train；完整题目池不为均衡来源而删除记录。实验训练题集建议按 GSM8K-Aug:DAPO=1:1 无放回抽取，validation 使用相同配比。原始池按记录数量混合时 GSM8K-Aug 约占 95.5%，与 balanced 采样的研究含义不同，需由用户选择。运行题数、seed、scale 候选及 M 不在此处静默确定。
+首轮候选子池 320 题，两来源各 160；每来源先抽样再切分 120 train / 40 validation，合计 240:80。此前 90/10 的完整池切分建议，以及 256:64 子池分配建议均被本方案替代。1:1 是 probing 前的来源配比，不要求筛选后的训练题集仍为 1:1，也不以题源名称代替经验难度。
 
-实施验收覆盖：同文件/seed 切分可复现；train/validation/test 的记录 ID 隔离；两个来源的 validation 数量正确；原始 prompt 和答案逐项保留；重复题保留；Math-500 内部 train 标记不能进入训练；缺失输入、读文件异常及无效测试记录停止；Stage A/B 的 train selection 完全一致。使用合成小文件测试接口，再对真实文件仅运行 CPU 数据构建，产物不提交 Git。
+待确认：抽样/切分 seed、probing scale 集合、每题每 scale 的重复次数 M、基本筛选规则与最终 train 规模、validation 是否保持完整、probing/sweep 轨迹复用规则。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
+
+实施验收覆盖：同文件/seed 切分可复现；train/validation/test 的记录 ID 隔离；两来源各抽160且各划120/40，probing前manifest已锁定，筛选不能移动split；原始 prompt 和答案逐项保留；重复题保留；Math-500 内部 train 标记不能进入训练；缺失输入、读文件异常及无效测试记录停止；Stage A/B 的 train selection 完全一致。使用合成小文件测试接口，再对真实文件仅运行 CPU 数据构建，产物不提交 Git。
