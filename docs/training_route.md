@@ -32,12 +32,13 @@ RL每步记录输入特征、实际动作/scale及行为策略身份和动作概
 
 ## 3. 基本筛选与切分
 
-题池候选为GSM8K-Aug、GSM8K及一个待定较难数据集；当前未选择第三个数据集或确定混合比例。
-基本筛选：题目/答案有效、最终答案可自动校验、去重，并将同一原题及增强变体按parent_problem_id分组切分。
+2026-10-02 用户确定训练来源为 GSM8K-Aug 和 DAPO-Math-17k；GSM8K-Aug-test 与 Math-500-test 是独立测试集，不增加其他题源。
+用户决定信任作者已有数据处理，本项目不再去重、不要求增强题与原题映射；此前 parent_problem_id 分组切分要求由本决定替代。基本检查只验证题目、prompt 与最终答案字段有效，保留原始题目和答案。按来源切分 train/validation 的比例与实验抽样配比待确认。
+不重复审计语义重复及原题关系，因此只保证文件角色和记录 ID 的隔离，不宣称已验证语义去重或 checkpoint 历史训练污染。构建脚本设计见 [数据集构建设计](dataset_construction_design.md)。
 固定sweep的成功率可作粗略模型相对难度参考，不要求复杂难度分层、同prefix分支搜索或逐step oracle标签。
 少量rollout全部失败不作为永久剔除规则；筛选阈值和抽样预算尚未确认。
 先锁定train/validation/test，再生成训练轨迹；train供两个训练阶段更新参数，validation只用于选择固定baseline scale、head checkpoint和超参数，test仅作最终评估。
-validation与test都不进入监督/策略梯度更新；官方保留测试题及其增强变体不能混入训练池。
+validation与test都不进入监督/策略梯度更新；两个指定测试文件不得参与训练池构建或参数选择；不据内部 extra_info.split 改变用户指定的文件角色。
 
 ## 4. 奖励与终止
 
@@ -52,6 +53,6 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
 | warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
 | RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
-| 数据与模型 | 第三个题源、混合比例、rollout数、checkpoint/data路径尚未提供或确认 |
+| 数据与模型 | 题源、data目录与checkpoint路径已提供；切分比例、混合比例、抽样规模及rollout数待确认 |
 
 本轮只记录批准的路线；不因确认路线就自动选择上述参数、下载安装依赖或启动实验。

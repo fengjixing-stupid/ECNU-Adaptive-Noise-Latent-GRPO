@@ -10,6 +10,8 @@ updated: 2026-10-02
 
 > 2026-10-02 用户确认修订：Stage B 纳入首版；Stage A/B共享train题目，Stage B使用当前head新rollout，validation/test隔离。当前契约见 [训练路线](training_route.md)。本文未确认的参数仍是建议，不作为启动实验授权。
 
+> 2026-10-02 数据修订：训练题源为 GSM8K-Aug 与 DAPO-Math-17k；指定 GSM8K-Aug-test 与 Math-500-test 为测试集。用户要求不再去重、不要求原题映射。当前数据边界与脚本设计见 [数据集构建设计](dataset_construction_design.md)，覆盖本文冲突的题源与切分建议。
+
 > **用途**：提供给本地 Codex 作为后续代码修改、Kaggle 实验执行与结果整理的统一实现说明。  
 > **实验平台硬约束**：**所有主要实验必须能够在 Kaggle Notebook / Kaggle GPU 环境上运行**。  
 > **研究范围硬约束**：只比较两种方法：  
