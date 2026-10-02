@@ -4,10 +4,11 @@ type: design
 status: active
 title: 本地 Smoke 与 Kaggle Notebook 实现计划
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-02
 related_docs:
   - DOC-SPEC-001
   - DOC-MINFIX-001
+  - DOC-TRAIN-001
   - DOC-POLICY-001
   - DOC-AGENT-001
 planned_code:
@@ -30,6 +31,8 @@ planned_code:
 
 **Tech Stack:** 本地现有 Python/PyTorch/pytest；Kaggle 单 GPU 自定义 SGLang、离线训练用 PyTorch、结果用 JSONL/Parquet。新增依赖在实施时明确版本与用途，不自动安装。
 
+当前训练路线按 [两阶段训练与共享题集](training_route.md)：基础筛选即可，两阶段共享train题目，RL独立on-policy采样，validation/test隔离；不要求同prefix分支搜索。
+
 **Spec:** [任务规范](AdaNoise_LGRPO_Codex_Kaggle_Spec.md)；[当前 minfix 审计](minfix_submodule_update.md)。返回 [文档索引](README.md)。
 
 ## 1. 当前边界与前置条件
@@ -49,7 +52,7 @@ Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md
 ## 2. 全局约束与设计决定
 
 冻结 backbone：eval 模式、所有 requires_grad=False、forward 使用 no_grad；head 输入 detach。optimizer 只含 hidden projection 和 MLP 参数。
-Noise Head：d→64 trainable projection，拼接六维统计→70→128→32→1，GELU，sigmoid；scale=0+(1-0)*ratio。固定 K=10，Gumbel temperature=1.0，one-sided=True。Stage B 不进入首版。
+Noise Head：d→64 trainable projection，拼接六维统计→70→128→32→1，GELU，sigmoid；scale=0+(1-0)*ratio。固定 K=10，Gumbel temperature=1.0，one-sided=True。Stage B 已于2026-10-02确认纳入首版；本段单输出sigmoid接口只描述Stage A，RL随机动作参数化需讨论后扩展。
 固定 baseline 和 adaptive 使用同 checkpoint、prompt、top-p、temperature、response cap、verifier、split、seeds、rollout 数；只改变 scale policy。
 不得自动量化、启用无 hidden fallback、改成每题单 scale 或改变实验预算。
 环境/网络/设备/OOM 错误立即停止实验并写失败记录；不得根据 Spec 的降级序列自动重试。项目代码错误可修复，三次失败停止并指出可疑假设。
@@ -147,16 +150,26 @@ checkpoint.save/load 保存 head state、architecture、feature schema、upstrea
 **Gate:** 采集文件完整、无 split 泄漏、resume 不重复，backbone 未改变；保存 noise_head_best.pt。Pilot 200/100/200，2 rollout/scale；Final seeds=[0,1,2]，规模由实测耗时决定。
 预算在 K0 后按 `(题数×候选scale数×rollout数×秒/rollout)` 估算并包含训练/验证时间；超 session 预算先停止计划扩展，不启动注定超时任务。
 
+### Task 4B — Head-Only RL（首版必需，详细实施计划待实验设置确认）
+
+**前置:** Kaggle baseline/hidden probe与Stage A已通过，用户确认随机动作分布、warm-start衔接、更新方式及预算；必需checkpoint/data输入齐备。未确认前不实现或运行本任务。
+**数据契约:** 共享Task 4的train题目与split manifest；使用当前head的新rollout，不把固定sweep或旧策略轨迹直接用于on-policy更新。最终正确性奖励，只更新head/projection，冻结backbone。
+
+- [ ] 明确随机动作与log_prob接口、行为版本、head梯度获取、Stage A权重迁移和确定性评估规则；另写具体可执行测试步骤。
+- [ ] 测试逐token动作、最终奖励到head的梯度、backbone冻结和同题独立轨迹，以及validation/test不进入更新。
+- [ ] 确认预算后进行head-only RL并支持checkpoint/optimizer/RNG恢复，记录独立Stage A/Stage B checkpoint身份。
+- [ ] Kaggle或资源失败按用户规则停止；不得把省略Stage B视为首版完成。
+
 ### Task 5 — 公平评估、Notebook 阶段门禁与分析（约 3–5 小时，不含推理耗时）
 
 **Files:** scripts/{evaluate_paired,analyze_results}.py、tests/test_split_selection.py、tests/test_metrics.py；完成 Notebook 及文档使用命令。
-**Interfaces:** evaluate 使用选定 c* 和锁定 head，两种 method 的完整 manifest 相同，仅 scale policy 不同；每题 seed/rollout 顺序配对。
+**Interfaces:** evaluate 使用选定 c* 和锁定 Stage B head，两种 method 的完整 manifest 相同，仅 scale policy 不同；每题 seed/rollout 顺序配对。
 
 - [ ] 测试 verifier 正确/错误/无法解析/截断；invalid 保留在 Pass@1 分母；latent、explicit、total token 数分别记录。测试选择脚本拒绝 test split；可选 Pass@4 默认关闭，需要预算允许后启用，两方法均为4 rollout。
 - [ ] 测试成对合并时缺失或重复 method 记录报错；按题聚类 paired bootstrap 95% CI，final 三 seed 单独汇报，不能把同题不同 seed 当独立题增加样本量。
 - [ ] Engineering 按两方法各32 test×1 rollout 运行；固定 baseline scale 由 validation 锁定，test 不再调参，记录所有 per-example/per-step Spec 字段和额外 scale mean/min/max/std。
 - [ ] 输出 summary.csv、paired_results.parquet、trajectory/entropy_scatter/method_comparison/scale_distribution 的 PDF/PNG；没有正确或错误样本时明确写 unavailable，禁止制造示例。
-- [ ] Notebook cells 依次执行资源探测→baseline smoke→hidden probe→collection→head train→adaptive smoke→paired eval→plots→导出；前一步 artifact 不通过则下一步不执行。运行相应测试、同步文档并提交。
+- [ ] Notebook cells 依次执行资源探测→baseline smoke→hidden probe→collection→Stage A head train→Stage B head-only RL→adaptive smoke→paired eval→plots→导出；前一步 artifact 不通过则下一步不执行。运行相应测试、同步文档并提交。
 
 **Gate:** scale 是乘法系数，方差比例=(s/c*)²；c*=0 时比例未定义，只报告绝对 scale 与扰动方差。最终报告区分 L0/K0/K1/K2，只有真实结果支持方法结论。测试 head 输出依输入变化，但研究结果学成常数或更差必须如实报告。
 
@@ -178,6 +191,8 @@ python scripts/train_noise_head.py --platform kaggle --config configs/adanoise_k
 python scripts/smoke_kaggle.py --platform kaggle --config configs/adanoise_kaggle.yaml --method adanoise
 python scripts/evaluate_paired.py --platform kaggle --config configs/adanoise_kaggle.yaml --resume
 ```
+
+Stage B CLI尚未定义，须在批准详细RL接口后加入；上述train_noise_head.py命令仅代表Stage A。
 
 所有 CLI 支持 `--model-path`、`--data-path`、`--output-dir` 与对应标量 override；合并优先级 CLI>YAML>默认值，写 resolved_config.json。分析脚本单独读取 artifacts，不重复启动模型。
 

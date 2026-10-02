@@ -1,6 +1,6 @@
 # 正式文档索引
 
-更新：2026-09-30；当前阶段：本地 CPU sampler smoke 已实现；真实模型尚未执行。
+更新：2026-10-02；当前阶段：本地 CPU sampler smoke 已实现；真实模型尚未执行。
 返回 [项目入口](../AGENTS.md)。
 
 | 阅读顺序 | 文档 | 用途 |
@@ -17,3 +17,5 @@
 [旧作者仓库审计](adanoise_repo_audit.md) 已归档，仅作为历史取证。
 
 [本地 CPU smoke 命令与证据](local_cpu_smoke.md)：Task 1验收和适用边界。
+
+[已确认两阶段训练与共享题集](training_route.md)：Stage B纳入首版；两阶段共享train题目、分别生成轨迹，validation/test隔离。

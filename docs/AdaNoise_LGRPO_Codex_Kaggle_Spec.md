@@ -4,9 +4,11 @@ type: requirements
 status: active
 title: AdaNoise-LGRPO：面向 Kaggle 的 Noise Head 自适应 Gumbel 探索实现规范
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-02
 ---
 # AdaNoise-LGRPO：面向 Kaggle 的 Noise Head 自适应 Gumbel 探索实现规范
+
+> 2026-10-02 用户确认修订：Stage B 纳入首版；Stage A/B共享train题目，Stage B使用当前head新rollout，validation/test隔离。当前契约见 [训练路线](training_route.md)。本文未确认的参数仍是建议，不作为启动实验授权。
 
 > **用途**：提供给本地 Codex 作为后续代码修改、Kaggle 实验执行与结果整理的统一实现说明。  
 > **实验平台硬约束**：**所有主要实验必须能够在 Kaggle Notebook / Kaggle GPU 环境上运行**。  
@@ -813,7 +815,7 @@ Noise Head 可单独训练。
 
 ---
 
-# 12. 推荐训练策略：两阶段，但第二阶段可选
+# 12. 首版训练策略：监督 warm start + Head-Only RL
 
 ## Stage A：Offline Supervised Warm Start（必须做）
 
@@ -943,9 +945,9 @@ s_{pred},s_i^*
 
 ---
 
-## Stage B：Head-Only Policy Gradient Fine-Tuning（可选但推荐）
+## Stage B：Head-Only Policy Gradient Fine-Tuning（首版必须包含）
 
-如果 Stage A 跑通且 Kaggle 剩余预算允许，再加入。
+在 Stage A 与 Kaggle baseline smoke 通过后实施。两阶段共享train题集，Stage B重新生成当前策略的rollout；动作分布和RL具体预算需实施前讨论。
 
 关键：
 
@@ -1032,13 +1034,7 @@ Stage A 已稳定
 
 之后启用。
 
-如果 Kaggle 时间/显存不足：
-
-```text
-论文主实验允许只使用 Stage A。
-```
-
-但需清楚说明是 offline-trained adaptive controller。
+如果 Kaggle 时间/显存不足，立即停止实验并报告；Stage B标记未完成，不自动退回Stage A-only首版。需要变更范围时先与用户交流。
 
 ---
 
@@ -1050,6 +1046,7 @@ Stage A 已稳定
 MVP = Frozen backbone
     + deterministic Noise Head
     + offline supervised warm-start
+    + head-only policy-gradient fine-tuning
     + step-wise scale output
     + fixed baseline comparison
 ```
