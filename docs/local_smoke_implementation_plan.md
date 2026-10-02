@@ -141,7 +141,7 @@ checkpoint.save/load 保存 head state、architecture、feature schema、upstrea
 **Files:** scripts/{collect_fixed_sweep,train_noise_head}.py、adaptive_noise/{dataset,resume}.py、tests/test_oracle_labels.py、tests/test_resume.py；更新 Notebook 对应 cells。
 **Interfaces:** collection row key=(dataset,split,problem_id,seed,scale,rollout_id,latent_step)，结果与 hidden shard 由此关联；build_oracle(rows) → problem_id 到最优 scale。
 
-- [ ] 测试 sample-level 平均 correctness argmax、平手选择小 scale（validation baseline 同样按平均 Pass@1 最大、小 scale 平手规则）；同题各轨迹 step 共享标签；重复/缺失 rollout 不能默认为完整，all-wrong 题明确标记为 noisy label。
+- [ ] 测试 sample-level 平均 correctness argmax、平手选择小 scale（validation baseline 同样按平均 Pass@1 最大、小 scale 平手规则）；同题各轨迹 step 共享标签；重复/缺失 rollout 不能默认为完整，本轮all-wrong/all-correct题按 [最新数据筛选规则](dataset_construction_design.md) 移出train选择；7次仍不敏感题记录problem_id，筛选记录保留。
 - [ ] Engineering：32 train/32 validation/32 test，seeds=[0]，候选[0,.25,.5,.75,1]，每scale 2 rollout；训练采集共320 rollout。固定 split manifest；2026-10-02 用户要求不再去重、不要求原题映射，按 [数据构建设计](dataset_construction_design.md) 替代原 parent_problem_id 分组要求。此处规模、scale与rollout数仍是待确认建议。
 - [ ] 实现 no_grad 采集 raw hidden/统计/正确性/时长/invalid；train 拟合 oracle，validation 用于选择 fixed c* 与 head checkpoint，test 不参与选择。head Adam lr=.001、batch=64、epochs=20、SmoothL1；按题等权避免长轨迹主导。
 - [ ] 每25样本写 progress.json/results_partial.parquet/hidden shards；训练另写 noise_head_latest.pt，包含 optimizer/epoch/RNG。恢复验证 model/split/feature/config manifest，原子写文件，row key 去重；测试中断恢复与不中断结果一致。

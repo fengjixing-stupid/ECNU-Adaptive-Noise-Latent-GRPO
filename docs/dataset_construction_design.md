@@ -11,7 +11,7 @@ related_docs:
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。seed、scale、重复次数及筛选规则尚待确认。本文设计脚本接口，尚未实现代码或运行模型。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；seed 与生成配置等实施参数尚待确认。本文设计脚本接口，尚未实现代码或运行模型。
 
 ## 输入与目标
 
@@ -64,14 +64,42 @@ related_docs:
 
 本地构建仅操作数据，不加载 checkpoint、不生成 hidden、不估计成功率。模型路径已由用户提供：`/Users/fengjixing/Python_Project/models/LLaMA3.2-1B-Instruct-Latent-GRPO-Top10`；真实采集仍须先通过 Kaggle GPU baseline smoke。
 
-后续 `collect_fixed_sweep.py` 接受固定 train/validation selection，在批准的 scales 和 M 下记录最终正确性，计算每题每个 scale 的经验成功率。保存每题每个 scale 的成功数、完成 rollout 数及经验正确率 q_hat_i(s)，用于基本难度筛选和 warm-start 初始化；不要求细致难度分桶或同 prefix 搜索。probing 与 Stage A sweep 是否共用轨迹及采集配置尚未确定，不能自动重复采集，也不能未校验契约就宣称可复用。不回头修改 split，不按少量全失败结果永久剔除题目。筛选阈值、预算与全失败标签处理实施前另行确定。
+后续 `collect_fixed_sweep.py` 接受固定 train/validation selection，在批准的 scales 和 M 下记录最终正确性，计算每题每个 scale 的经验成功率。保存每题每个 scale 的成功数、完成 rollout 数及经验正确率 q_hat_i(s)，用于基本难度筛选和 warm-start 初始化；不要求细致难度分桶或同 prefix 搜索。probing 与 Stage A sweep 是否共用轨迹及采集配置尚未确定，不能自动重复采集，也不能未校验契约就宣称可复用。不回头修改 split；train 筛选按下节最新用户决定执行，替代此前不剔除全失败题的建议。筛选移出本轮训练题集，不删除原始数据。
 
 两阶段优化只读取 train。Stage B 重新 rollout，不能复用 Stage A 轨迹作当前策略样本。测试文件不提供训练 scale 标签，不参与候选 scale、数据比例或 checkpoint 选择。
+
+## 已确认 probing 与 train 筛选规则
+
+首轮 scale 集合 S 为 `[0, 0.25, 0.5, 1.0, 2.0]`，保守备用集合为 `[0, 0.25, 0.5, 0.75, 1.0]`。s 是 Gumbel 乘法 scale，方差随 s² 变化。probing 每条轨迹固定同一个 s，不使用逐 token head 动作。
+
+首轮按 scale 报告 invalid generation 比例与最终答案正确率。用户根据 s=2.0 下是否大量 invalid 或明显正确率下降，决定后续沿用首轮集合还是改用保守集合；“大量”未设数值阈值，脚本不自动切换。已完成 probing 的结果始终标注其实际 scale 集合，不能用缺失的 s=0.75 结果冒充保守集合完成结果。是否修改 Noise Head 输出上界独立于 probing 候选集合，尚未批准。
+
+s=0 始终 M=1，在所有阶段、追加和恢复时均不得再请求本题的 s=0 rollout。四个非零 scale 首轮分别 M=3；如需追加，各累计到 M=5，再累计到 M=7，每次每个非零 scale 只新增2条，保留既有结果。每题正常完成的累计 probing 次数为13、21或29；这是随机扰动响应的粗略筛选，不把 s=0 一次成功当作统计上确定的成功概率。
+
+在每个完整采样阶段计算 q_hat_i(s)=success_count/completed_count，delta=max(q_hat)-min(q_hat)，包含 s=0 的单次结果。禁止从不完整记录默认为完整或把缺失 rollout 计作错误答案。train 判定按以下优先级执行：
+
+| 条件 | 本轮训练题集处理 | reason |
+| --- | --- | --- |
+| 所有 scale 的已完成结果全错 | 剔除 | all_wrong |
+| 所有 scale 的已完成结果全对 | 剔除 | all_correct |
+| 有对有错且 delta > 0.4 | 保留，停止追加该题 | noise_sensitive |
+| 有对有错且 delta ≤ 0.4，非零 M=3或5 | 非零 scale 累计追加到5或7 | continue_probing |
+| 有对有错且 delta ≤ 0.4，非零 M=7 | 剔除并保存 problem_id | not_sensitive_at_cap |
+
+阈值严格大于0.4，等于0.4不保留。不额外增加重复次数，不为达到目标训练题数自动补抽或放宽筛选。筛选后 train 数量及两来源比例由结果决定。全错/全对剔除是有限次观测下的本轮选择，不宣称证明题目永久不可解或必然正确。
+
+输出 `probe_rollouts.parquet`（problem_id、split、scale、rollout_id、seed、最终答案、reward、终止/invalid状态）、`probe_summary.parquet`（每 scale 的样本数/成功数/q_hat、delta、采样阶段）、`selection_decisions.parquet`（每题 problem_id、来源身份、原始行号、保留/剔除与原因），以及 `train_selected.parquet`。所有剔除题都保留可回查 ID，尤其 not_sensitive_at_cap；原始数据与320题候选清单不删除。可用 problem_id 关联候选清单恢复题目，或按输入文件哈希与 source_row 找回原始记录。
+
+环境、网络、设备故障或OOM立即停止，不生成奖励或筛选决定。validation 不进入训练筛选；完整80题保留，具体 validation probing 采样预算另行确定。两阶段仅使用 train_selected，RL重新生成当前策略轨迹。
+
+只对240个train候选按此规则 probing，首轮为3120条，全部追加到上限为6960条；实际通常介于两者之间。该计算不包含validation、Kaggle smoke及正式训练。GPU wall time须由实测吞吐估算。
 
 ## 待确认参数与验收
 
 首轮候选子池 320 题，两来源各 160；每来源先抽样再切分 120 train / 40 validation，合计 240:80。此前 90/10 的完整池切分建议，以及 256:64 子池分配建议均被本方案替代。1:1 是 probing 前的来源配比，不要求筛选后的训练题集仍为 1:1，也不以题源名称代替经验难度。
 
-待确认：抽样/切分 seed、probing scale 集合、每题每 scale 的重复次数 M、基本筛选规则与最终 train 规模、validation 是否保持完整、probing/sweep 轨迹复用规则。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
+待确认：抽样/切分与rollout seed、生成长度/explicit采样设置、invalid判定接口、validation probing预算、probing/sweep轨迹复用规则。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
 
 实施验收覆盖：同文件/seed 切分可复现；train/validation/test 的记录 ID 隔离；两来源各抽160且各划120/40，probing前manifest已锁定，筛选不能移动split；原始 prompt 和答案逐项保留；重复题保留；Math-500 内部 train 标记不能进入训练；缺失输入、读文件异常及无效测试记录停止；Stage A/B 的 train selection 完全一致。使用合成小文件测试接口，再对真实文件仅运行 CPU 数据构建，产物不提交 Git。
+
+probing 控制器与筛选实现另新增 `adaptive_noise/probing.py`、`scripts/select_probe_dataset.py` 和 `tests/test_probing.py`。验收覆盖首轮13条、递增只加非零scale、s=0绝不追加、delta=0.4边界、全错/全对优先剔除、7次仍不敏感的ID回查、恢复不重复采样、未完成记录禁止筛选和错误不变成R=0。只用合成reward记录验证控制器，真实模型probing仍在Kaggle验收后进行。
