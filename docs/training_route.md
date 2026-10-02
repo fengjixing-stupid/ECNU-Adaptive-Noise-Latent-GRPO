@@ -53,6 +53,6 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
 | warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
 | RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
-| 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；seed、生成设置、validation probing预算及轨迹复用待确认 |
+| 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；模型rollout随机数安排、生成设置、validation probing预算及轨迹复用待确认 |
 
 本轮只记录批准的路线；不因确认路线就自动选择上述参数、下载安装依赖或启动实验。

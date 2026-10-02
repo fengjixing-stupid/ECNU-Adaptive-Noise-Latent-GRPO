@@ -11,7 +11,7 @@ related_docs:
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；seed 与生成配置等实施参数尚待确认。本文设计脚本接口，尚未实现代码或运行模型。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置等模型实施参数尚待确认。本文设计脚本接口，尚未实现代码或运行模型。
 
 ## 输入与目标
 
@@ -34,7 +34,7 @@ related_docs:
 
 新增 `scripts/build_dataset.py`、`adaptive_noise/dataset_builder.py`、`configs/dataset_build.yaml`、`tests/test_dataset_builder.py`；独立于作者 submodule，不修改其代码。
 
-拟定命令为 `python scripts/build_dataset.py --config configs/dataset_build.yaml`。配置显式指定四个文件、输出目录、抽样与切分 seed、每来源候选题数和 train/validation 配额。首轮每来源 160 题，分为 120 train / 40 validation；尚未确认的 seed 不设置可执行默认值。缺失文件或必填配置立即失败，不自动下载或寻找替代文件。
+拟定命令为 `python scripts/build_dataset.py --config configs/dataset_build.yaml`。配置显式指定四个文件、输出目录、master_seed、每来源候选题数和 train/validation 配额。首轮每来源 160 题，分为 120 train / 40 validation；master_seed 固定为用户确认的42，三个派生 seed 按下节算法生成。缺失文件或必填配置立即失败，不自动下载或寻找替代文件。
 
 实现分为三个顺序步骤：
 
@@ -43,6 +43,20 @@ related_docs:
 3. 写出题目池、split manifest 与统计报告；先完成文件写入，再发布完成标记。已有输出目录拒绝覆盖，要求新的输出路径。只报告实际读取和筛选数量，不把文件元数据数量当作最终可用数量。
 
 基础字段检查并不证明所有答案可自动评分。保留原始 ground_truth 和 reward_model.style，后续使用统一的最终答案 verifier；不因 Math-500 包含符号答案而提前删题。verifier 未实现或不支持必需格式时，按缺失前置条件停止采集。
+
+## 已确认 master seed 与派生规则
+
+用户确认 `master_seed=42`，只派生三个用于数据构建的 seed；不把三个不同 seed 当作三轮独立实验。算法为 `sha256-v1`：对 UTF-8 字符串 `adanoise.dataset-seeds.v1:{master_seed}:{role}` 计算 SHA-256，取前4字节按无符号大端整数解释。避免依赖进程随机化的 Python `hash()`。
+
+| role | 派生 seed（master=42） | 职责 |
+| --- | ---: | --- |
+| gsm8k_aug_sample | 2028899853 | GSM8K-Aug无放回抽样160题 |
+| dapo_sample | 3785434924 | DAPO无放回抽样160题 |
+| train_validation_split | 262147858 | 抽样后各来源120/40切分 |
+
+抽样两个 RNG 独立；切分只使用第三个 seed 初始化的一个独立 RNG，按固定来源顺序 GSM8K-Aug → DAPO 连续消费，分别切分各来源160题。随机操作前将记录按 source_row 排序，避免流式读取批次影响排序。保存 master seed、全部 role/派生值、派生算法版本、采样 RNG 算法及 Python 版本到 build manifest。改 master seed 属于新构建，已锁定 split 不被覆盖。
+
+三个派生 seed 的职责只覆盖数据抽样和切分；模型 rollout 的随机数安排不默认为这三个 seed，需在模型采集配置中另行明确。
 
 ## 数据契约与产物
 
@@ -98,7 +112,7 @@ s=0 始终 M=1，在所有阶段、追加和恢复时均不得再请求本题的
 
 首轮候选子池 320 题，两来源各 160；每来源先抽样再切分 120 train / 40 validation，合计 240:80。此前 90/10 的完整池切分建议，以及 256:64 子池分配建议均被本方案替代。1:1 是 probing 前的来源配比，不要求筛选后的训练题集仍为 1:1，也不以题源名称代替经验难度。
 
-待确认：抽样/切分与rollout seed、生成长度/explicit采样设置、invalid判定接口、validation probing预算、probing/sweep轨迹复用规则。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
+待确认：模型rollout随机数安排、生成长度/explicit采样设置、invalid判定接口、validation probing预算、probing/sweep轨迹复用规则。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
 
 实施验收覆盖：同文件/seed 切分可复现；train/validation/test 的记录 ID 隔离；两来源各抽160且各划120/40，probing前manifest已锁定，筛选不能移动split；原始 prompt 和答案逐项保留；重复题保留；Math-500 内部 train 标记不能进入训练；缺失输入、读文件异常及无效测试记录停止；Stage A/B 的 train selection 完全一致。使用合成小文件测试接口，再对真实文件仅运行 CPU 数据构建，产物不提交 Git。
 
