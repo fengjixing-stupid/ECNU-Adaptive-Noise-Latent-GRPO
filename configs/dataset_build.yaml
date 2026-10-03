@@ -1,0 +1,10 @@
+master_seed: 42
+sample_per_source: 160
+train_per_source: 120
+validation_per_source: 40
+inputs:
+  gsm8k_aug: data/GSM8k-Aug-oss-dup-all.parquet
+  dapo_math: data/DAPO-Math-17k-en-train.parquet
+  gsm8k_aug_test: data/GSM8k-Aug-test.parquet
+  math500_test: data/Math-500-test.parquet
+output_dir: artifacts/dataset_candidates_v1

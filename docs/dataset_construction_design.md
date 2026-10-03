@@ -11,7 +11,7 @@ related_docs:
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout根seed=12345、逐轨迹派生与invalid分类已确认。本文设计脚本接口，尚未实现代码或运行模型。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout根seed=12345、逐轨迹派生与invalid分类已确认。2026-10-03 本地数据构建、CPU probing控制/评分和离线选择已实现并验收；尚未运行模型。证据与输入接口见 [CPU验收](dataset_cpu_acceptance.md)。
 
 ## 输入与目标
 
@@ -30,11 +30,11 @@ related_docs:
 
 用户决定信任作者已有处理：不再次去重，不比较训练/测试的文本相似度，不要求 parent_problem_id，不做语义聚类；保留来源中的重复记录。记录级 ID 隔离不代表语义去重已验证。
 
-## 拟实现接口
+## 已实现本地接口
 
-新增 `scripts/build_dataset.py`、`adaptive_noise/dataset_builder.py`、`configs/dataset_build.yaml`、`tests/test_dataset_builder.py`；独立于作者 submodule，不修改其代码。
+已实现 `scripts/build_dataset.py`、`adaptive_noise/dataset_builder.py`、`configs/dataset_build.yaml`、`tests/test_dataset_builder.py`；独立于作者 submodule，不修改其代码。
 
-拟定命令为 `python scripts/build_dataset.py --config configs/dataset_build.yaml`。配置显式指定四个文件、输出目录、master_seed、每来源候选题数和 train/validation 配额。首轮每来源 160 题，分为 120 train / 40 validation；master_seed 固定为用户确认的42，三个派生 seed 按下节算法生成。缺失文件或必填配置立即失败，不自动下载或寻找替代文件。
+命令为 `python scripts/build_dataset.py --config configs/dataset_build.yaml`。配置显式指定四个文件、输出目录、master_seed、每来源候选题数和 train/validation 配额。首轮每来源 160 题，分为 120 train / 40 validation；master_seed 固定为用户确认的42，三个派生 seed 按下节算法生成。缺失文件或必填配置立即失败，不自动下载或寻找替代文件。
 
 实现分为三个顺序步骤：
 
@@ -153,7 +153,7 @@ probing显式启用add_noise_gumbel_softmax=True，noise_scale逐请求取批准
 
 优先使用引擎finish_reason识别截断；只有长度计数时保留budget_hit诊断，不能把等于上限自动声称为确定截断。invalid率分母为该scale实际完成的所有rollout；空输出、提取失败仍在正确率分母中。不丢弃invalid来提高经验正确率。模型执行或判定器故障不是正常错误答案，停止并报告，不吞异常转R=0。
 
-## 实施前置条件与验收
+## 模型执行前置条件与验收
 
 首轮候选子池 320 题，两来源各 160；每来源先抽样再切分 120 train / 40 validation，合计 240:80。此前 90/10 的完整池切分建议，以及 256:64 子池分配建议均被本方案替代。1:1 是 probing 前的来源配比，不要求筛选后的训练题集仍为 1:1，也不以题源名称代替经验难度。
 

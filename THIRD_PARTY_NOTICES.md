@@ -4,12 +4,13 @@ type: guide
 status: active
 title: Third-party notices
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-03
 ---
 # Third-party notices
 
 The streaming Top-K algorithm in `adaptive_noise/sampling_kernel.py` is adapted from the minfix Latent-GRPO sampler, commit `0b7e85f15e9859033653964282348e518f9f6291`.
 The test reference executes that upstream helper without importing its CUDA engine.
+`adaptive_noise/answer_verifier.py` executes only the allowlisted pure scoring helpers from the same pinned minfix evaluation scripts, with no upstream entrypoint or CUDA engine imports.
 Source: [minfix repository](https://github.com/fengjixing-stupid/Latent-GRPO/tree/0b7e85f15e9859033653964282348e518f9f6291).
 Return to [project README](README.md).
 

@@ -1,16 +1,17 @@
 # AdaNoise-LGRPO 项目入口
 
 项目目标：在作者已训练的 1B Latent-GRPO checkpoint 上冻结 backbone，仅训练 Noise Head；主要实验使用 Kaggle 单 GPU Notebook。
-更新：2026-10-02；当前阶段：本地 CPU smoke 范围已获用户确认；Task 1 sampler smoke 已实现。
+更新：2026-10-03；当前阶段：CPU sampler及数据构建/probing控制已验收，真实模型尚未运行。
 
 ## 读取路线
 
 先读 [项目守则](docs/AGENTS.md)，再读 [正式文档索引](docs/README.md)、[任务规范](docs/AdaNoise_LGRPO_Codex_Kaggle_Spec.md) 和当前任务文档。
 长任务恢复再读 `progress/INDEX.md` → `progress/current.md` → 被索引的相关笔记。
-实施和协作先读 [子 Agent 协议](docs/AGENT_USE.md)。本轮零子 Agent：任务顺序依赖紧密，主 Agent 已有必要上下文。
+实施和协作先读 [子 Agent 协议](docs/AGENT_USE.md)。数据CPU任务由主Agent顺序实施，一个只读review Agent复核；后续按协议决定委派范围。
 
 ## 工作边界
 
+- 数据构建、probing请求控制与离线选择已实现，见 [数据CPU验收](docs/dataset_cpu_acceptance.md)；实际GPU采集器仍待Kaggle阶段。
 - 本地 CPU sampler smoke 已实现；后续实施按 [smoke 设计与计划](docs/local_smoke_implementation_plan.md) 的前置条件执行。
 - 首版训练使用监督warm start＋head-only policy gradient，共享train题集但RL重新采样，validation/test隔离；详见 [训练路线](docs/training_route.md)。
 - 只比较 validation 选定的 Fixed-Gumbel 与 AdaNoise；禁止 backbone/LoRA/GRPO/PPO 训练。
