@@ -4,7 +4,7 @@ type: design
 status: active
 title: 两阶段 Noise Head 训练与共享题集
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-03
 related_docs:
   - DOC-SPEC-001
   - DOC-PLAN-001
@@ -54,6 +54,6 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
 | warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
 | RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
-| 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；生成设置沿用作者：GSM8K-Aug max_new_tokens=128，DAPO=4096；validation分类保留与最佳scale轨迹复用已确认；模型rollout随机数安排及invalid接口待确定 |
+| 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；生成设置沿用作者：GSM8K-Aug max_new_tokens=128，DAPO=4096；validation分类保留与最佳scale轨迹复用已确认；模型rollout根seed=12345逐轨迹派生、作者答案判定与invalid/截断独立标记已确认 |
 
 本轮只记录批准的路线；不因确认路线就自动选择上述参数、下载安装依赖或启动实验。

@@ -4,14 +4,14 @@ type: design
 status: active
 title: 数据集构建脚本设计
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-03
 related_docs:
   - DOC-TRAIN-001
   - DOC-PLAN-001
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout随机数安排及invalid接口仍待实施前明确。本文设计脚本接口，尚未实现代码或运行模型。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout根seed=12345、逐轨迹派生与invalid分类已确认。本文设计脚本接口，尚未实现代码或运行模型。
 
 ## 输入与目标
 
@@ -56,7 +56,7 @@ related_docs:
 
 抽样两个 RNG 独立；切分只使用第三个 seed 初始化的一个独立 RNG，按固定来源顺序 GSM8K-Aug → DAPO 连续消费，分别切分各来源160题。随机操作前将记录按 source_row 排序，避免流式读取批次影响排序。保存 master seed、全部 role/派生值、派生算法版本、采样 RNG 算法及 Python 版本到 build manifest。改 master seed 属于新构建，已锁定 split 不被覆盖。
 
-三个派生 seed 的职责只覆盖数据抽样和切分；模型 rollout 的随机数安排不默认为这三个 seed，需在模型采集配置中另行明确。
+三个派生 seed 的职责只覆盖数据抽样和切分；模型 rollout 使用独立根seed=12345，逐轨迹派生规则见下节。
 
 ## 数据契约与产物
 
@@ -131,14 +131,38 @@ s=0 始终 M=1，在所有阶段、追加和恢复时均不得再请求本题的
 
 probing显式启用add_noise_gumbel_softmax=True，noise_scale逐请求取批准的scale（包括0）。作者默认该开关False，sampler源码仅在True分支使用noise_scale；开关必须启用才能执行已批准的探测。其他生成语义沿用上述配置，不能因OOM或耗时自动改长度。多GPU数量、batch/request容量是执行资源配置，不直接照搬作者8GPU例子的数值到Kaggle。
 
-## 待确认参数与验收
+## 已确认 rollout 随机数与答案判定
+
+2026-10-03 用户采用：模型探测沿用作者根seed `12345`，按 `problem_id、scale、rollout_id` 派生并记录逐轨迹seed，与数据master_seed=42分开。rollout_id从0开始，同题同scale追加只新增后续ID，恢复保留原seed。派生身份不包含batch序号、GPU编号或采样阶段，使追加和恢复可以定位同一条轨迹。
+
+派生算法 `probe-sha256-v1`：将 `[12345, problem_id, format(float(scale), ".17g"), rollout_id]` 用JSON编码（ensure_ascii=True、separators=(",", ":")），在前面加ASCII前缀 `adanoise.probe-seeds.v1:`，计算SHA-256；取前4字节按无符号大端整数解释。scale使用规范化字符串，例如0、0.25、0.5、1、2；不使用Python hash()。保存完整身份、根seed、算法版本和结果seed。
+
+作者eval按整批任务播种Python/Torch，不足以证明自定义SGLang引擎子进程已消费请求seed。实施时追踪seed到实际随机采样消费者；Kaggle smoke验收同轨迹身份在追加/恢复中的seed传递。不因派生值一致就宣称不同硬件、batch或引擎版本生成必然逐token一致。
+
+正确性沿用作者：GSM8K-Aug优先boxed，再尝试####及末尾数字，通过规范化文本或数值比较；DAPO与Math-500使用作者high任务的boxed提取及规范化文本比较。valid但答案错误记R=0，与invalid分开统计。不增加格式奖励，不换成新符号判定器。
+
+每条完成生成记录分别保存 `reward`、`invalid_reason`、`truncated`、`finish_reason`、`extracted_answer`：
+
+| 状态 | 判定与奖励 |
+| --- | --- |
+| 空输出 | invalid_reason=empty_output，R=0 |
+| 无法提取非空最终答案 | invalid_reason=answer_unextractable，R=0 |
+| 可提取但最终答案错误 | 无invalid标记，R=0 |
+| 可提取且最终答案正确 | 无invalid标记，R=1 |
+| 截断 | 单独标记；按可提取最终答案判断R，不因截断自动改为0 |
+
+优先使用引擎finish_reason识别截断；只有长度计数时保留budget_hit诊断，不能把等于上限自动声称为确定截断。invalid率分母为该scale实际完成的所有rollout；空输出、提取失败仍在正确率分母中。不丢弃invalid来提高经验正确率。模型执行或判定器故障不是正常错误答案，停止并报告，不吞异常转R=0。
+
+## 实施前置条件与验收
 
 首轮候选子池 320 题，两来源各 160；每来源先抽样再切分 120 train / 40 validation，合计 240:80。此前 90/10 的完整池切分建议，以及 256:64 子池分配建议均被本方案替代。1:1 是 probing 前的来源配比，不要求筛选后的训练题集仍为 1:1，也不以题源名称代替经验难度。
 
-待确认：模型rollout随机数安排与invalid判定接口。生成配置、validation流程及最佳scale轨迹复用已确认。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
+2026-10-03：本数据构建/probing设计的参数已确认，包括rollout随机数与invalid规则；生成配置、validation流程及最佳scale轨迹复用已确认。train筛选规则、scale与递增M已确定，最终train规模由结果决定。必须先完成 Kaggle baseline smoke、测量 rollout 吞吐并核算预算，才执行真实 probing。
 
 实施验收覆盖：同文件/seed 切分可复现；train/validation/test 的记录 ID 隔离；两来源各抽160且各划120/40，probing前manifest已锁定，筛选不能移动split；原始 prompt 和答案逐项保留；重复题保留；Math-500 内部 train 标记不能进入训练；缺失输入、读文件异常及无效测试记录停止；Stage A/B 的 train selection 完全一致。使用合成小文件测试接口，再对真实文件仅运行 CPU 数据构建，产物不提交 Git。
 
 probing 控制器与筛选实现另新增 `adaptive_noise/probing.py`、`scripts/select_probe_dataset.py` 和 `tests/test_probing.py`。验收覆盖首轮13条、递增只加非零scale、s=0绝不追加、delta=0.4边界、全错/全对优先剔除、7次仍不敏感的ID回查、恢复不重复采样、未完成记录禁止筛选和错误不变成R=0。只用合成reward记录验证控制器，真实模型probing仍在Kaggle验收后进行。
 
 新增验收：validation四种终态均保留且仅标记；最佳scale按经验正确率选取、平手较小scale；只保留最佳scale全部轨迹且包含错误轨迹；其他scale摘要完整；缺失特征阻止warm-start；作者low/high生成配置按来源固定；probing实际启用噪声开关。
+
+新增验收：逐轨迹seed确定性和scale规范化；追加/恢复不改变seed身份；空输出、提取失败、有效错误分开；截断且最终答案正确仍R=1；invalid保留在分母；执行/判定故障不计作R=0；GSM8K与high答案判定与作者reference一致。
