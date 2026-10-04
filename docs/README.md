@@ -1,6 +1,6 @@
 # 正式文档索引
 
-更新：2026-10-03；当前阶段：CPU sampler与数据构建/probing控制已验收；真实模型尚未执行。
+更新：2026-10-04；当前阶段：CPU sampler与数据构建/probing控制已验收；用户已完成SFT启动seed检查，GRPO latent/hidden smoke脚本待GPU验收。
 返回 [项目入口](../AGENTS.md)。
 
 | 阅读顺序 | 文档 | 用途 |
@@ -27,3 +27,5 @@
 [数据CPU验收与命令](dataset_cpu_acceptance.md)：95项全测试、真实240/80候选池、4160请求及合成轨迹选择的证据和边界。
 
 [独立 Engine seed 检测 Notebook](../notebooks/rand_seed_test.ipynb)：`sample_once(prompt, seed)` 使用已确认 Kaggle 模型路径，在 T4 GPU 0 上以 fp16、tp=1 运行；每次通过 `Engine(random_seed=seed)` 重建引擎后生成并关闭。需要预先可用的作者自定义 SGLang/FlashInfer；不安装依赖。保留用户附件的 temperature=1、max_new_tokens=64，仅用于 seed 诊断。两项 CPU mock 测试验证调用传参和异常清理，未执行 GPU。PASS 仅表示独立 Engine 的解码文本复现，不能替代持久 Engine 请求级 seed 和 latent/hidden 对齐验收。
+
+[GRPO checkpoint Kaggle K0 smoke](kaggle_k0_smoke.md)：以用户跑通Notebook为基础，保留环境与clone逻辑；单题三次独立Engine，核验启动seed及逐步hidden/clean top10/mixture对齐。新GRPO路径取代旧SFT模型，脚本已实现、真实GPU结果待用户运行。

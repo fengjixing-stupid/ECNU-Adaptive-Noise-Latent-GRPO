@@ -4,7 +4,7 @@ type: design
 status: active
 title: 本地 Smoke 与 Kaggle Notebook 实现计划
 created: 2026-09-30
-updated: 2026-10-02
+updated: 2026-10-04
 related_docs:
   - DOC-SPEC-001
   - DOC-MINFIX-001
@@ -106,6 +106,8 @@ Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补�
 **Gate:** 单 CPU 小张量通过；不要求本地下载或加载 1B。预期 smoke 运行 10–60 秒，超时记录并排查，不能伪称通过。
 
 ### Task 2 — Kaggle 固定 baseline 与 Hidden Probe（约 2–3 小时）
+
+2026-10-04 用户确认的当前 K0 实现见 [GRPO latent/hidden smoke](kaggle_k0_smoke.md)：`scripts/kaggle_latent_smoke.py` 与 `notebooks/kaggle_latent_smoke.ipynb` 已实现，真实GPU验收待执行。该范围为固定train的1道GSM8K、三次独立Engine（同seed两次、不同seed一次），GSM生成上限128、双侧噪声；覆盖下面早期方案的64/one-sided=True。原环境准备与clone单元格保留。其余总Notebook/正式采集器接口仍待实现，不把脚本CPU通过标记成Task 2真实模型通过。
 
 **Files:** scripts/{prepare_upstream,smoke_kaggle}.py、configs/adanoise_kaggle.yaml、notebooks/adanoise_kaggle.ipynb。
 **Interfaces:** fixed baseline 使用原始作者 Engine；仅导出当前 LAST hidden probe、latent step 计数及资源记录。现有 LAST capture 先 probe，不先修改 model runner。
