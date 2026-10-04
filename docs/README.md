@@ -25,3 +25,5 @@
 [数据CPU实施计划](dataset_cpu_implementation_plan.md)：当前会话顺序实施数据构建、probing控制与轨迹选择CPU验收。
 
 [数据CPU验收与命令](dataset_cpu_acceptance.md)：95项全测试、真实240/80候选池、4160请求及合成轨迹选择的证据和边界。
+
+[独立 Engine seed 检测 Notebook](../notebooks/rand_seed_test.ipynb)：`sample_once(prompt, seed)` 使用已确认 Kaggle 模型路径，在 T4 GPU 0 上以 fp16、tp=1 运行；每次通过 `Engine(random_seed=seed)` 重建引擎后生成并关闭。需要预先可用的作者自定义 SGLang/FlashInfer；不安装依赖。保留用户附件的 temperature=1、max_new_tokens=64，仅用于 seed 诊断。两项 CPU mock 测试验证调用传参和异常清理，未执行 GPU。PASS 仅表示独立 Engine 的解码文本复现，不能替代持久 Engine 请求级 seed 和 latent/hidden 对齐验收。
