@@ -1,0 +1,25 @@
+Latent-GRPO minimal-fix source package
+Created: 2026-08-21
+Branch: fix/text-runtime-dependencies
+HEAD: 910989600df1896258a448f3341b010cc265a296
+Runtime-equivalent parent: 8c9ce4932234844620d4da0b99df982123d35ae7
+
+Scope:
+- Tests and documentation only.
+- No changes under configs/, Latent-GRPO/, latent_grpo_runner/, tools/, scripts/,
+  train_latent_grpo.py, requirements files, or constraint files.
+- Runtime configuration remains Low 16/32/SGLang 0.45.
+
+Verification performed in the packaging environment:
+- Full pytest: 241 passed, 1 skipped.
+- Local release gate: PASS.
+- Local release report Python: 3.13.5.
+
+Target-server requirement:
+- Rerun the local release gate under the locked Python 3.11.15 environment.
+- Because the commit changed, run a new commit-bound 3-GPU validation before
+  starting any new formal training run from this HEAD.
+- Do not interrupt or migrate an already-running formal job on parent HEAD 8c9ce49.
+
+Not included:
+- Model weights, datasets, target virtual environment, or experiment outputs.
