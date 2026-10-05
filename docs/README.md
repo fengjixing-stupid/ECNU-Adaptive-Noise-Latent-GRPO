@@ -1,6 +1,6 @@
 # 正式文档索引
 
-更新：2026-10-04；当前阶段：CPU sampler与数据构建/probing控制已验收；用户已完成SFT启动seed检查，GRPO latent/hidden smoke脚本待GPU验收。
+更新：2026-10-05；当前阶段：用户已提供 GRPO K0 PASS 输出；持久 Engine 请求级 seed smoke 已实现，待 Kaggle GPU 验收。
 返回 [项目入口](../AGENTS.md)。
 
 | 阅读顺序 | 文档 | 用途 |
@@ -11,7 +11,7 @@
 | 4 | [当前 minfix 审计](minfix_submodule_update.md) | 新 submodule、streaming sampler 和本地修改边界 |
 | 5 | [本地 smoke 设计与实现计划](local_smoke_implementation_plan.md) | 任务接口、测试与 Kaggle 阶段门禁 |
 
-`docs/AGENT_USE.md` 已读取，当前任务不启用子 Agent。本地 CPU smoke 范围已获确认，后续实验设计先与用户交流；遇到缺失必需文件或输入立即停止。
+`docs/AGENT_USE.md` 已读取，本次实现由主 Agent 顺序完成，一个只读 review Agent 复核。本地 CPU smoke 范围已获确认，后续实验设计先与用户交流；遇到缺失必需文件或输入立即停止。
 工作恢复状态在 `progress/`，不属于正式文档树。
 
 [旧作者仓库审计](adanoise_repo_audit.md) 已归档，仅作为历史取证。
@@ -28,4 +28,6 @@
 
 [独立 Engine seed 检测 Notebook](../notebooks/rand_seed_test.ipynb)：`sample_once(prompt, seed)` 使用已确认 Kaggle 模型路径，在 T4 GPU 0 上以 fp16、tp=1 运行；每次通过 `Engine(random_seed=seed)` 重建引擎后生成并关闭。需要预先可用的作者自定义 SGLang/FlashInfer；不安装依赖。保留用户附件的 temperature=1、max_new_tokens=64，仅用于 seed 诊断。两项 CPU mock 测试验证调用传参和异常清理，未执行 GPU。PASS 仅表示独立 Engine 的解码文本复现，不能替代持久 Engine 请求级 seed 和 latent/hidden 对齐验收。
 
-[GRPO checkpoint Kaggle K0 smoke](kaggle_k0_smoke.md)：以用户跑通Notebook为基础，保留环境与clone逻辑；单题三次独立Engine，核验启动seed及逐步hidden/clean top10/mixture对齐。新GRPO路径取代旧SFT模型，脚本已实现、真实GPU结果待用户运行。
+[GRPO checkpoint Kaggle K0 smoke](kaggle_k0_smoke.md)：以用户跑通Notebook为基础，保留环境与clone逻辑；单题三次独立Engine，核验启动seed及逐步hidden/clean top10/mixture对齐。新GRPO路径取代旧SFT模型，用户已提供 GPU PASS 输出。
+
+[持久 Engine 请求级 seed smoke](kaggle_request_seed_smoke.md)：基于最新附件，保留 clone/环境/Bash 构建运行逻辑，删除固定 commit 与源码 SHA 门禁；单 Engine 三个顺序请求，关闭 prefix cache，待 GPU 验收。

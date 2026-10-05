@@ -1,7 +1,7 @@
 # AdaNoise-LGRPO 项目入口
 
 项目目标：在作者已训练的 1B Latent-GRPO checkpoint 上冻结 backbone，仅训练 Noise Head；主要实验使用 Kaggle 单 GPU Notebook。
-更新：2026-10-03；当前阶段：CPU sampler及数据构建/probing控制已验收，真实模型尚未运行。
+更新：2026-10-05；当前阶段：CPU sampler及数据构建/probing控制已验收，用户已提供真实 GRPO K0 PASS 输出；持久 Engine 请求级 seed 待 GPU 验收。
 
 ## 读取路线
 
@@ -22,7 +22,7 @@
 
 ## 目录与版本控制
 
-`latent_grpo_minfix/Latent-GRPO-final/` 是用户修订仓库，作为固定 commit `0b7e85f` 的 submodule 引用；不更改其 origin，不提交权重、数据、缓存和运行产物。
+`latent_grpo_minfix/Latent-GRPO-final/` 是用户修订仓库，作为固定 commit `0b7e85f` 的 submodule 引用；不更改其 origin，不提交权重、数据、缓存和运行产物。用户已要求本次 Kaggle [请求 seed smoke](docs/kaggle_request_seed_smoke.md) 使用当前安装源码，删除固定 checkout/source SHA 门禁；仓库 submodule 引用保持不变。
 `docs/` 维护正式事实、规范和计划；`progress/` 保存本地恢复状态，默认不提交，不通过全量 git add 混入。
 后续源码修改应形成可复现补丁或独立包，不在作者仓库内制造无法由主项目复现的本地修改。
 任何已有用户改动都保留；禁止强推和破坏性 Git 操作。
@@ -35,4 +35,4 @@ python -m pytest -q
 python scripts/smoke_local.py --config configs/local_smoke.yaml --device cpu
 git diff --check -- AGENTS.md README.md docs adaptive_noise scripts tests configs
 ```
-`/path/to/r-doc` 替换为当前安装技能位置。本地 smoke 使用说明见 [Task 1验收](docs/local_cpu_smoke.md)；Kaggle/Noise Head命令仍是待实现接口。
+`/path/to/r-doc` 替换为当前安装技能位置。本地 smoke 使用说明见 [Task 1验收](docs/local_cpu_smoke.md)；Kaggle 当前入口见[请求 seed smoke](docs/kaggle_request_seed_smoke.md)；Noise Head命令仍是待实现接口。

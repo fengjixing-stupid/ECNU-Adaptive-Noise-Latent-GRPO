@@ -4,7 +4,7 @@ type: testing
 status: active
 title: Kaggle GRPO checkpoint latent 与 hidden smoke
 created: 2026-10-04
-updated: 2026-10-04
+updated: 2026-10-05
 related_docs:
   - DOC-PLAN-001
   - DOC-DATA-001
@@ -16,7 +16,7 @@ related_code:
 ---
 # Kaggle GRPO checkpoint latent 与 hidden smoke
 
-返回 [文档索引](README.md)。本页记录已获用户确认的 K0 范围；脚本已实现，真实 GPU 验收尚未执行。
+返回 [文档索引](README.md)。本页记录已获用户确认的 K0 范围；用户于2026-10-05提供真实 GPU 的 K0 PASSED 输出：同 seed 的 token/trace/hidden 一致，不同 seed 的 trace/hidden 改变，均31个混合 latent step、hidden2048、答案3。依据用户粘贴输出验收，未下载或本地读取 raw artifacts。后续使用[持久 Engine 请求级 seed smoke](kaggle_request_seed_smoke.md)，其中已按用户要求移除固定 commit/source SHA 门禁；本页其余内容描述历史 K0 脚本。
 
 ## 输入与运行方式
 
