@@ -116,7 +116,7 @@ def test_latest_source_is_copied_without_pinned_commit_or_sha_gate(monkeypatch, 
 
 def test_notebook_embeds_script_and_has_no_checkout_or_source_hash_check():
     m = load_script()
-    n = json.loads(Path('notebooks/ecnu-smoke-adaptive-latent-grpo.ipynb').read_text())
+    n = json.loads(Path('notebooks/kaggle_request_seed_smoke.ipynb').read_text())
     cell = ''.join(n['cells'][9]['source'])
     script = cell.split("<<'PY'\n", 1)[1].split('\nPY\n', 1)[0]
     assert script == Path('scripts/kaggle_request_seed_smoke.py').read_text().rstrip('\n')

@@ -4,7 +4,7 @@ type: design
 status: active
 title: 本地 Smoke 与 Kaggle Notebook 实现计划
 created: 2026-09-30
-updated: 2026-10-04
+updated: 2026-10-05
 related_docs:
   - DOC-SPEC-001
   - DOC-MINFIX-001
@@ -37,7 +37,7 @@ planned_code:
 
 ## 1. 当前边界与前置条件
 
-Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md)。其余任务仍是待实现接口；本轮不执行模型加载、训练、数据下载或Kaggle任务。
+Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md)。2026-10-05 K0和持久Engine请求seed已获用户GPU PASS输出；[正式probing入口](kaggle_probing.md)已实现，单次最多8小时，正式数据采集与Noise Head训练尚未执行。后文早期规模/参数建议以对应最新已批准专题文档为准。
 
 | 阶段 | 做什么 | 可证明什么 |
 | --- | --- | --- |
@@ -107,7 +107,7 @@ Kaggle 输入的 code-package 必须含固定上游源码或预构建包、补�
 
 ### Task 2 — Kaggle 固定 baseline 与 Hidden Probe（约 2–3 小时）
 
-2026-10-04 用户确认的当前 K0 实现见 [GRPO latent/hidden smoke](kaggle_k0_smoke.md)：`scripts/kaggle_latent_smoke.py` 与 `notebooks/kaggle_latent_smoke.ipynb` 已实现，用户已提供真实GPU PASS输出。当前下一阶段见[持久 Engine 请求级 seed smoke](kaggle_request_seed_smoke.md)，单Engine三顺序请求、关闭prefix cache，并按用户要求使用当前安装源码，删除固定commit/source SHA门禁。本段其余内容描述历史K0范围。该范围为固定train的1道GSM8K、三次独立Engine（同seed两次、不同seed一次），GSM生成上限128、双侧噪声；覆盖下面早期方案的64/one-sided=True。原环境准备与clone单元格保留。其余总Notebook/正式采集器接口仍待实现，不把脚本CPU通过标记成Task 2真实模型通过。
+2026-10-04 用户确认的当前 K0 实现见 [GRPO latent/hidden smoke](kaggle_k0_smoke.md)：`scripts/kaggle_latent_smoke.py` 与 `notebooks/kaggle_latent_smoke.ipynb` 已实现，用户已提供真实GPU PASS输出。该后续检查见[持久 Engine 请求级 seed smoke](kaggle_request_seed_smoke.md)，单Engine三顺序请求、关闭prefix cache，并按用户要求使用当前安装源码，删除固定commit/source SHA门禁。本段其余内容描述历史K0范围。该范围为固定train的1道GSM8K、三次独立Engine（同seed两次、不同seed一次），GSM生成上限128、双侧噪声；覆盖下面早期方案的64/one-sided=True。原环境准备与clone单元格保留。该请求seed检查也已由用户提供GPU PASS输出；当前正式采集器见[正式probing入口](kaggle_probing.md)，不把CPU验收标记为正式题池运行完成。
 
 **Files:** scripts/{prepare_upstream,smoke_kaggle}.py、configs/adanoise_kaggle.yaml、notebooks/adanoise_kaggle.ipynb。
 **Interfaces:** fixed baseline 使用原始作者 Engine；仅导出当前 LAST hidden probe、latent step 计数及资源记录。现有 LAST capture 先 probe，不先修改 model runner。

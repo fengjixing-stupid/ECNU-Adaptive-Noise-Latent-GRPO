@@ -1,7 +1,7 @@
 # AdaNoise-LGRPO 项目入口
 
 项目目标：在作者已训练的 1B Latent-GRPO checkpoint 上冻结 backbone，仅训练 Noise Head；主要实验使用 Kaggle 单 GPU Notebook。
-更新：2026-10-05；当前阶段：CPU sampler及数据构建/probing控制已验收，用户已提供真实 GRPO K0 PASS 输出；持久 Engine 请求级 seed 待 GPU 验收。
+更新：2026-10-05；当前阶段：CPU sampler及数据构建/probing控制已验收，用户已提供真实 GRPO K0 PASS 输出；持久 Engine 请求级 seed GPU 检查通过；正式 probing 入口已实现，单次最多8小时，待用户运行。
 
 ## 读取路线
 
@@ -11,7 +11,7 @@
 
 ## 工作边界
 
-- 数据构建、probing请求控制与离线选择已实现，见 [数据CPU验收](docs/dataset_cpu_acceptance.md)；实际GPU采集器仍待Kaggle阶段。
+- 数据构建、probing请求控制与离线选择已实现，见 [数据CPU验收](docs/dataset_cpu_acceptance.md)；实际GPU采集器已实现，正式运行入口见[正式 probing](docs/kaggle_probing.md)。
 - 本地 CPU sampler smoke 已实现；后续实施按 [smoke 设计与计划](docs/local_smoke_implementation_plan.md) 的前置条件执行。
 - 首版训练使用监督warm start＋head-only policy gradient，共享train题集但RL重新采样，validation/test隔离；详见 [训练路线](docs/training_route.md)。
 - 只比较 validation 选定的 Fixed-Gumbel 与 AdaNoise；禁止 backbone/LoRA/GRPO/PPO 训练。
@@ -35,4 +35,4 @@ python -m pytest -q
 python scripts/smoke_local.py --config configs/local_smoke.yaml --device cpu
 git diff --check -- AGENTS.md README.md docs adaptive_noise scripts tests configs
 ```
-`/path/to/r-doc` 替换为当前安装技能位置。本地 smoke 使用说明见 [Task 1验收](docs/local_cpu_smoke.md)；Kaggle 当前入口见[请求 seed smoke](docs/kaggle_request_seed_smoke.md)；Noise Head命令仍是待实现接口。
+`/path/to/r-doc` 替换为当前安装技能位置。本地 smoke 使用说明见 [Task 1验收](docs/local_cpu_smoke.md)；Kaggle 当前入口见[正式 probing](docs/kaggle_probing.md)；Noise Head命令仍是待实现接口。

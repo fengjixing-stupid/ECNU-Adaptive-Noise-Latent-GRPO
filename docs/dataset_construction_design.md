@@ -4,14 +4,14 @@ type: design
 status: active
 title: 数据集构建脚本设计
 created: 2026-10-02
-updated: 2026-10-03
+updated: 2026-10-05
 related_docs:
   - DOC-TRAIN-001
   - DOC-PLAN-001
 ---
 # 数据集构建脚本设计
 
-返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout根seed=12345、逐轨迹派生与invalid分类已确认。2026-10-03 本地数据构建、CPU probing控制/评分和离线选择已实现并验收；尚未运行模型。证据与输入接口见 [CPU验收](dataset_cpu_acceptance.md)。
+返回 [文档索引](README.md)。已确定题源、不再去重边界与首轮子池方案：先分别抽取，再固定 240 train / 80 validation，之后 probing。probing scale、递增重复次数和 train 筛选规则已确定；抽样/切分采用 master_seed=42 的三路派生 seed；生成配置、validation标记和最佳scale轨迹复用已确认；模型rollout根seed=12345、逐轨迹派生与invalid分类已确认。2026-10-03 本地数据构建、CPU probing控制/评分和离线选择已实现并验收；尚未运行模型。证据与输入接口见 [CPU验收](dataset_cpu_acceptance.md)。2026-10-05 用户已提供K0及持久Engine seed GPU PASS输出，并确认[正式 probing 入口](kaggle_probing.md)，单次最多8小时；正式题池采集尚未执行。
 
 ## 输入与目标
 

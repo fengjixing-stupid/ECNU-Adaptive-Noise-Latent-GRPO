@@ -10,12 +10,12 @@ related_docs:
   - DOC-PLAN-001
 related_code:
   - scripts/kaggle_request_seed_smoke.py
-  - notebooks/ecnu-smoke-adaptive-latent-grpo.ipynb
+  - notebooks/kaggle_request_seed_smoke.ipynb
   - tests/test_request_seed_smoke.py
 ---
 # Kaggle 持久 Engine 请求级 seed smoke
 
-返回 [文档索引](README.md)。用户已提供 K0 PASS 输出并要求直接继续；本阶段 CPU 验证完成，真实 Kaggle GPU 结果待运行。
+返回 [文档索引](README.md)。用户已提供 K0 PASS 输出并要求直接继续；本阶段 CPU 验证完成，用户于2026-10-05提供 REQUEST SEED PASSED 输出：同worker428、三个不同request ID，sameseed token/trace/hidden一致，different seed三者改变；latent steps31/31/34，hidden2048，均正常退出无截断。验收依据用户粘贴输出，未下载raw artifacts。当前正式入口见[正式 probing](kaggle_probing.md)，原请求seed Notebook保留为诊断副本。
 
 ## 执行入口与输入
 

@@ -2,7 +2,7 @@
 
 冻结作者 1B Latent-GRPO backbone，训练轻量 Noise Head，比较固定与逐 latent step 自适应 Gumbel scale。
 
-当前阶段（2026-10-03）：本地CPU sampler、数据构建和probing控制已验收；尚未运行真实模型实验。
+当前阶段（2026-10-05）：本地CPU sampler、数据构建和probing控制已验收；用户已提供K0及持久Engine请求seed GPU PASS。正式probing入口已实现，单次最多8小时，待用户运行。
 
 1. 从 [项目入口](AGENTS.md) 读取规则。
 2. 查看 [文档索引](docs/README.md)。
@@ -27,3 +27,5 @@ python scripts/build_dataset.py --config configs/dataset_build.yaml
 python scripts/plan_probe_requests.py --candidate-dir artifacts/dataset_candidates_v1 --output-dir artifacts/probe_requests_v1
 ```
 使用指定虚拟环境；已有输出拒绝覆盖。数据文件和产物不提交Git，换机器需用户提供输入。命令、轨迹契约及CPU证据见 [数据CPU验收](docs/dataset_cpu_acceptance.md)。
+
+正式入口：[Kaggle probing Notebook](notebooks/ecnu-smoke-adaptive-latent-grpo.ipynb)，运行与跨session续跑见[正式 probing 使用说明](docs/kaggle_probing.md)。

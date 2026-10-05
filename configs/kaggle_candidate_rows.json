@@ -1,0 +1,1615 @@
+{
+  "schema_version": 1,
+  "master_seed": 42,
+  "original_manifest_sha256": "dd3bf185cf363fe5c98867f3d040d2e3719f4c58c1268a242544d619554fe85c",
+  "inputs": {
+    "gsm8k_aug": {
+      "sha256": "3766e3a83cd82ddd686392d8bc6ef6f262821490a09b694b2caed44f1a482501"
+    },
+    "dapo_math": {
+      "sha256": "6f0bc38023dc691533841d37f31a267acd3f277b60fc8746cc85b6493aa04726"
+    }
+  },
+  "rows": [
+    {
+      "source": "gsm8k_aug",
+      "source_row": 1611,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 3297,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 5039,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 7335,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 9872,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 18670,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 18783,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 25690,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 28469,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 28993,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 31240,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 32611,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 37803,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 40891,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 40955,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 42143,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 43556,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 50020,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 52757,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 56565,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 57677,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 58960,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 64367,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 65496,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 79757,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 80931,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 82634,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 85733,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 94516,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 106047,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 108080,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 112488,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 116492,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 119826,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 120907,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 121800,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 124289,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 130890,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 133743,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 134404,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 140242,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 141155,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 144217,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 148168,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 150030,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 154310,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 155514,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 157511,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 157793,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 162700,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 166130,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 173491,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 173751,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 173992,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 175901,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 178011,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 185127,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 189040,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 192916,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 193642,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 194553,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 196168,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 196381,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 199708,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 201254,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 201780,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 202897,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 203033,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 203372,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 209608,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 213073,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 213512,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 218808,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 221788,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 221873,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 223529,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 225471,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 225940,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 233637,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 233855,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 234099,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 235032,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 240934,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 246309,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 246369,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 247868,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 248782,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 251017,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 251065,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 252184,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 254296,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 255458,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 257561,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 257668,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 258277,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 262247,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 265216,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 265985,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 267790,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 268379,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 271194,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 276852,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 277786,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 278513,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 279364,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 282323,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 283288,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 287578,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 290760,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 291233,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 291902,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 292504,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 293064,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 294548,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 295315,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 295484,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 295675,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 296841,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 298535,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 300514,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 237,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 384,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 453,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 459,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 556,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 573,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 622,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 860,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1042,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1131,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1159,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1558,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1564,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1606,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1683,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2145,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2185,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2190,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2291,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2419,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2432,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2491,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2721,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2942,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2972,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3125,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3202,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3302,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3401,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3486,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3710,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3769,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3859,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4052,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4123,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4277,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4712,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5088,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5139,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5315,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5425,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5507,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5629,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5653,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5736,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5956,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6109,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6111,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6436,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6807,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6838,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6848,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6977,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7013,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7132,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7229,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7340,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7356,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7473,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7703,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7988,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7995,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8322,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8327,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8352,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8362,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8402,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8466,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8912,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8963,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9028,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9177,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9243,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9247,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9309,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9342,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9450,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9550,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 9894,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10012,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10078,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10180,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10183,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10209,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10266,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10335,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10371,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10575,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10585,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10681,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10820,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10908,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10939,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11018,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11098,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11255,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11476,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11550,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11579,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11598,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11719,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11726,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11871,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11961,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12049,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12082,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12167,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12256,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12286,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12287,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12403,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12671,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12691,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12857,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12902,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12977,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 13504,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 13547,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 13803,
+      "split": "train"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 14108,
+      "split": "train"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 4230,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 23828,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 29268,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 34033,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 38145,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 39657,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 46498,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 48722,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 49148,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 58296,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 84238,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 87288,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 97420,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 97752,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 111939,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 116234,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 119885,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 129546,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 135867,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 141812,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 147924,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 169403,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 171540,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 183401,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 184563,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 192477,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 206891,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 210286,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 215258,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 217687,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 219839,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 251020,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 258318,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 270012,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 273316,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 273433,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 279689,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 281114,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 298744,
+      "split": "validation"
+    },
+    {
+      "source": "gsm8k_aug",
+      "source_row": 299202,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 269,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 551,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 1030,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2386,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 2539,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3280,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 3372,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4259,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4314,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4385,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4452,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4482,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 4568,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5271,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5323,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5366,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5691,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 5862,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6308,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6327,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 6446,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7582,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 7922,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8215,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8765,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 8974,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10043,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 10972,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11113,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11176,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11223,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11353,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 11781,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12011,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12148,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12606,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 12901,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 13323,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 13716,
+      "split": "validation"
+    },
+    {
+      "source": "dapo_math",
+      "source_row": 13778,
+      "split": "validation"
+    }
+  ]
+}

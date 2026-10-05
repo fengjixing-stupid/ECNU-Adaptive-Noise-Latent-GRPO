@@ -1,6 +1,6 @@
 # 正式文档索引
 
-更新：2026-10-05；当前阶段：用户已提供 GRPO K0 PASS 输出；持久 Engine 请求级 seed smoke 已实现，待 Kaggle GPU 验收。
+更新：2026-10-05；当前阶段：用户已提供 GRPO K0 PASS 输出；持久 Engine 请求级 seed GPU 检查通过；正式 probing 入口已实现，单次最多8小时，待用户运行。
 返回 [项目入口](../AGENTS.md)。
 
 | 阅读顺序 | 文档 | 用途 |
@@ -30,4 +30,8 @@
 
 [GRPO checkpoint Kaggle K0 smoke](kaggle_k0_smoke.md)：以用户跑通Notebook为基础，保留环境与clone逻辑；单题三次独立Engine，核验启动seed及逐步hidden/clean top10/mixture对齐。新GRPO路径取代旧SFT模型，用户已提供 GPU PASS 输出。
 
-[持久 Engine 请求级 seed smoke](kaggle_request_seed_smoke.md)：基于最新附件，保留 clone/环境/Bash 构建运行逻辑，删除固定 commit 与源码 SHA 门禁；单 Engine 三个顺序请求，关闭 prefix cache，待 GPU 验收。
+[持久 Engine 请求级 seed smoke](kaggle_request_seed_smoke.md)：基于最新附件，保留 clone/环境/Bash 构建运行逻辑，删除固定 commit 与源码 SHA 门禁；单 Engine 三个顺序请求，关闭 prefix cache，用户已提供 GPU PASS 输出。
+
+[正式 probing 入口](kaggle_probing.md)：固定240/80子池，逐rollout持久化、续跑及8小时单次上限；当前Notebook改为正式入口。
+
+[正式 probing 实施计划](kaggle_probing_implementation_plan.md)：本次CPU实施、恢复/时间门禁与交付检查。
