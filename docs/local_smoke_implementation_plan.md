@@ -52,7 +52,7 @@ Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md
 ## 2. 全局约束与设计决定
 
 冻结 backbone：eval 模式、所有 requires_grad=False、forward 使用 no_grad；head 输入 detach。optimizer 只含 hidden projection 和 MLP 参数。
-Noise Head输入已确认clean hidden＋六维统计；候选内部结构为d→64 trainable projection，拼接后70→128→32→1，GELU，sigmoid，内部投影和层宽尚待最终确定。已确认scale范围`[0,2]`，候选映射为`scale=2*ratio`；固定K=10、Gumbel temperature=1.0，沿用作者配置one-sided=False。Stage B已确认纳入首版；单输出sigmoid接口只描述Stage A候选，RL动作参数化需讨论后扩展，不能将作者Gumbel噪声分布直接当作scale策略。
+Noise Head输入已确认clean hidden＋六维统计，当前融合方式确认采用拼接；候选内部结构为d→64 trainable projection，拼接后70→128→32→1，GELU，sigmoid，归一化、内部投影和层宽尚待最终确定。已确认scale范围`[0,2]`，候选映射为`scale=2*ratio`；固定K=10、Gumbel temperature=1.0，沿用作者配置one-sided=False。Stage B已确认纳入首版；单输出sigmoid接口只描述Stage A候选，RL动作参数化需讨论后扩展，不能将作者Gumbel噪声分布直接当作scale策略。
 固定 baseline 和 adaptive 使用同 checkpoint、prompt、top-p、temperature、response cap、verifier、split、seeds、rollout 数；只改变 scale policy。
 不得自动量化、启用无 hidden fallback、改成每题单 scale 或改变实验预算。
 环境/网络/设备/OOM 错误立即停止实验并写失败记录；不得根据 Spec 的降级序列自动重试。项目代码错误可修复，三次失败停止并指出可疑假设。

@@ -25,6 +25,7 @@ backbone两阶段始终冻结；不进行backbone反向传播，不训练LoRA，
 题目级scale标签用于初始化，不声称它监督了逐step最优动作。
 输出 scale 范围已确认采用 `[0,2]`；Stage A 使用 Adam，学习率已确认 `3e-4`，覆盖旧计划的 `.001` 建议。该学习率不自动用于 Stage B。
 2026-10-14 用户确认head输入为当前clean hidden加6个统计特征，不采用hidden-only。输入来源已定；原方案中hidden投影64维与后续MLP层宽尚未单独最终确认，不把“直接输入”推定为已批准某种内部投影或拼接位置。
+用户讨论异质特征的尺度、冗余和容量后，决定当前继续采用拼接作为融合方式。拼接不要求两组特征原本属于同一语义空间；是否有效仍需验证。归一化、内部投影和层宽尚未最终确定，不自动增加双分支编码器或复杂融合模块。
 用户确认Stage A其余提议：SmoothL1、batch size 64、20 epochs、按题等权、按最小validation loss保存best checkpoint。此处每题等权要求先平均同题的训练损失，再在题之间平均，避免长轨迹或多轨迹题主导。best选择使用离线validation标签，不在validation上更新参数。
 正式评估锁定训练完成的 head；validation/test 不进行参数更新，不使用轨迹距离奖励、聚类奖励或逐题 Test-Time 适应。
 
@@ -71,6 +72,8 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 作者原始Gumbel噪声机制继续沿用，无需重新选择噪声类型。当前代码为标准Gumbel采样、裁剪到`[-1.5,3]`、乘scale，再加到logits上。这里随机的是噪声，scale可以由head确定性输出；轨迹仍然随机。
 
 原Spec另提议在Stage B令head输出一个scale策略的参数，先采样scale，再使用作者Gumbel噪声。例如`a~Beta(alpha,beta), scale=2*a`是候选而非已采用配置。该策略下score-function更新使用`log pi_theta(scale|features)`，与作者sampler返回的Gumbel噪声相关数值不是同一个概率。
+
+这里的“原Spec”指本项目设计文档，不是Latent-GRPO论文。论文第2.2节式(2)–(5)及第3.4节式(22)–(23)使用latent perturbation/显式token的策略目标更新模型；没有提出Beta scale策略。本项目额外将每步scale作为head动作，使最终正确性奖励可通过`(R-b)*sum_t grad log pi_head(a_t|x_t)`更新head，而不需要对奖励或冻结的SGLang生成过程反向传播。每步可共用终局奖励，这只是有噪声的轨迹级归因，不证明某个scale的单次选择就是正确原因。Beta提供有界连续动作参数化，但不是唯一可行方案，也尚未获用户采用。论文依据：[Latent-GRPO](https://arxiv.org/html/2604.27998v1)。
 
 随机scale不是所有RL方法的必然要求。若保留确定性scale，需要另行建立对head有效的梯度估计；不能因生成轨迹有随机性就将标准Gumbel的log probability直接用于更新head。作者实际路径还有裁剪、top-K选择及scale=0，直接使用普通连续Gumbel密度不能视为已验证的正确head梯度。当前仅澄清概念，不新增动作分布或替换训练算法。
 
