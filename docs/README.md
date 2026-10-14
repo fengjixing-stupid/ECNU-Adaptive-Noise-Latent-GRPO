@@ -1,6 +1,6 @@
 # 正式文档索引
 
-更新：2026-10-05；当前阶段：用户已提供 GRPO K0 PASS 输出；持久 Engine 请求级 seed GPU 检查通过；正式 probing 入口已实现，单次最多8小时，待用户运行。
+更新：2026-10-14；当前阶段：正式probing完成，13 train / 80 validation的本地selected数据已验收；Noise Head与Stage A/B训练待实现，单次Kaggle实验最多8小时；无监督/Test-Time分支暂停。
 返回 [项目入口](../AGENTS.md)。
 
 | 阅读顺序 | 文档 | 用途 |
@@ -18,9 +18,11 @@
 
 [本地 CPU smoke 命令与证据](local_cpu_smoke.md)：Task 1验收和适用边界。
 
-[已确认两阶段训练与共享题集](training_route.md)：Stage B纳入首版；两阶段共享train题目、分别生成轨迹，validation/test隔离。
+[已确认两阶段训练与共享题集](training_route.md)：Stage B纳入首版；两阶段共享train题目、分别生成轨迹，validation/test隔离；当前数据统计、已确认参数与实验待补项。
 
-[数据集构建脚本设计](dataset_construction_design.md)：首轮两来源各抽160题、合计240 train / 80 validation，固定切分后probing筛选；本地脚本已实现，模型采集尚未执行。
+[暂停的无监督轨迹探索与Test-Time设计](test_time_exploration_archived.md)：保留逐题重置、序列映射、距离目标等讨论；当前实验不使用。
+
+[数据集构建脚本设计](dataset_construction_design.md)：首轮两来源各抽160题、合计240 train / 80 validation，固定切分后probing筛选；采集已完成，最终数据状态见训练路线。
 
 [数据CPU实施计划](dataset_cpu_implementation_plan.md)：当前会话顺序实施数据构建、probing控制与轨迹选择CPU验收。
 

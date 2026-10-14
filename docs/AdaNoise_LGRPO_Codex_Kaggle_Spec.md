@@ -4,9 +4,11 @@ type: requirements
 status: active
 title: AdaNoise-LGRPO：面向 Kaggle 的 Noise Head 自适应 Gumbel 探索实现规范
 created: 2026-09-30
-updated: 2026-10-02
+updated: 2026-10-14
 ---
 # AdaNoise-LGRPO：面向 Kaggle 的 Noise Head 自适应 Gumbel 探索实现规范
+
+> 2026-10-14 当前状态与覆盖规则：probing已完成，本地选定数据13 train / 80 validation已验收；用户已确认scale范围`[0,2]`、Stage A Adam学习率`3e-4`，覆盖本文旧范围与学习率建议。无监督轨迹奖励/Test-Time适应已归档暂停，当前使用监督warm-start＋真实正确性奖励head-only RL，评估时不更新参数。输入结构、其余训练与RL参数以[训练路线及待补项](training_route.md)为准，本文示例不能视为已批准配置。
 
 > 2026-10-02 用户确认修订：Stage B 纳入首版；Stage A/B共享train题目，Stage B使用当前head新rollout，validation/test隔离。当前契约见 [训练路线](training_route.md)。本文未确认的参数仍是建议，不作为启动实验授权。
 

@@ -4,7 +4,7 @@ type: design
 status: active
 title: 两阶段 Noise Head 训练与共享题集
 created: 2026-10-02
-updated: 2026-10-03
+updated: 2026-10-14
 related_docs:
   - DOC-SPEC-001
   - DOC-PLAN-001
@@ -14,6 +14,8 @@ related_docs:
 返回 [文档索引](README.md)。2026-10-02 用户已确认本路线；这是训练与数据契约，尚未实现训练代码或执行实验。
 本文件覆盖原 Spec 中 Stage B 可选及只做 Stage A 的首版范围；后续实验设置仍需与用户交流。
 
+2026-10-14：正式 probing 已完成，本地选定数据已验收；Noise Head 与 Stage A/B 训练尚未实现。用户暂停后续讨论的无监督/Test-Time 分支，相关想法保存在 [归档设计](test_time_exploration_archived.md)，当前实验不使用。
+
 ## 1. 已确认路线
 
 Stage A：监督 warm start，类似SFT但监督目标是noise scale。冻结checkpoint生成固定scale sweep，按题的最终答案正确率产生目标scale，监督训练Noise Head。
@@ -21,6 +23,8 @@ Stage B：首版必须包含head-only policy gradient。初始化自Stage A；�
 backbone两阶段始终冻结；不进行backbone反向传播，不训练LoRA，不启动完整Latent-GRPO/GRPO/PPO。
 各步骤可以使用不同scale；“先大后小”只是待观察的假设，不作为强制目标或标签。
 题目级scale标签用于初始化，不声称它监督了逐step最优动作。
+输出 scale 范围已确认采用 `[0,2]`；Stage A 使用 Adam，学习率已确认 `3e-4`，覆盖旧计划的 `.001` 建议。该学习率不自动用于 Stage B。
+正式评估锁定训练完成的 head；validation/test 不进行参数更新，不使用轨迹距离奖励、聚类奖励或逐题 Test-Time 适应。
 
 ## 2. 共享题目、独立轨迹
 
@@ -51,9 +55,30 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 
 | 待确定内容 | 当前边界 |
 | --- | --- |
+| head 输入与结构 | 原方案为2048维clean hidden投影64维，加6个统计量，MLP 70→128→32→1；用户后来讨论过hidden-only，最终输入与层宽尚未确认。暂停无监督分支不自动批准任何一种输入方案 |
+| Stage A 其余超参数 | SmoothL1、batch64、20 epochs、按题等权、最小validation loss保存best是已提出的建议，尚未最终确认；输出范围和Adam学习率已单独确认 |
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
 | warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
 | RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
+| 正式评估 | validation选择固定scale与head，锁定后评估两种方法；每题rollout数、重复seed数、最终汇总指标和配对预算仍需确定 |
 | 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；生成设置沿用作者：GSM8K-Aug max_new_tokens=128，DAPO=4096；validation分类保留与最佳scale轨迹复用已确认；模型rollout根seed=12345逐轨迹派生、作者答案判定与invalid/截断独立标记已确认 |
 
 本轮只记录批准的路线；不因确认路线就自动选择上述参数、下载安装依赖或启动实验。
+
+## 6. 当前数据与实验准备状态（2026-10-14）
+
+本地数据目录为 `artifacts/probing_v1/selected/`。manifest状态complete：4608次probing，13道训练题（11 GSM8K-Aug、2 DAPO），80道validation题。训练标签为10题0、1题0.5、2题2；13题对应21条轨迹、526个latent steps。validation目标为78题0、2题2。数据少和标签偏斜是已知事实，不据此自动扩池、重采样或改变筛选规则。
+
+本次重新核验6个Parquet文件哈希与manifest一致，362条保留轨迹引用的724个JSON文件均存在，训练轨迹/步数与标签统计一致。此前完整本地验收已逐对验证schema、维度、有限值、对齐与选择决定；本次未重复全部深度检查，不声称JSON另有上游哈希证明。
+
+`retained_trajectories.parquet`包含全部320题各自最佳scale的轨迹，不能直接全部作为训练输入；必须按`train_selected.parquet`中的13个problem_id过滤。validation以`validation_marked.parquet`中的80题独立加载。
+
+| 部分 | 当前状态 | 开展实验前的工作 |
+| --- | --- | --- |
+| backbone与推理环境 | 真实GRPO 1B、T4单GPU的K0及请求seed检查已通过，正式probing完成 | 后续沿用同一模型身份和作者生成配置；训练模块集成后仍需adaptive GPU smoke |
+| 离线输入 | selected本地完整；原始题库和指定测试集已有 | 提供selected在Kaggle上的实际挂载/恢复路径；无需重新probing或额外下载模型 |
+| head及Stage A | 尚无features/noise_head/controller/checkpoint实现或训练CLI | 确认输入/结构及剩余训练参数，完成数据加载、训练、保存恢复和CPU验收 |
+| Stage B | 正确性奖励与冻结范围已定，随机策略/训练代码未实现 | 确认随机动作、warm-start衔接、每题采样量、更新次数/学习率及预算；实现当前策略rollout和head梯度更新 |
+| 最终对比 | 两种方法与validation/test隔离已定 | 实现validation选择、固定预算配对评估、结果导出，确认seed和指标 |
+
+所有单次Kaggle实验不超过8小时；离线训练、RL和评估的具体预算尚未确定。当前Notebook仍是probing入口，不是训练Notebook。下一工作单元应先锁定head输入/结构，再给出Stage A/B衔接与最小训练实施计划；当前不运行实验。

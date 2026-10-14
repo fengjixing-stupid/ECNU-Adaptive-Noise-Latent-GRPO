@@ -2,7 +2,7 @@
 
 冻结作者 1B Latent-GRPO backbone，训练轻量 Noise Head，比较固定与逐 latent step 自适应 Gumbel scale。
 
-当前阶段（2026-10-05）：本地CPU sampler、数据构建和probing控制已验收；用户已提供K0及持久Engine请求seed GPU PASS。正式probing入口已实现，单次最多8小时，待用户运行。
+当前阶段（2026-10-14）：正式probing完成，本地selected数据已验收（13道训练题、21条训练轨迹、80道validation题）。接下来实现监督warm-start与head-only RL；当前[训练路线与待补项](docs/training_route.md)为准，单次Kaggle实验最多8小时。无监督/Test-Time分支已[归档暂停](docs/test_time_exploration_archived.md)，当前实验不使用。
 
 1. 从 [项目入口](AGENTS.md) 读取规则。
 2. 查看 [文档索引](docs/README.md)。

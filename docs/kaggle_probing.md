@@ -4,7 +4,7 @@ type: guide
 status: active
 title: Kaggle 正式 probing 与8小时续跑入口
 created: 2026-10-05
-updated: 2026-10-05
+updated: 2026-10-14
 related_docs:
   - DOC-DATA-001
   - DOC-REQUEST-SEED-001
@@ -19,7 +19,13 @@ related_code:
 ---
 # Kaggle 正式 probing 与8小时续跑入口
 
-返回[文档索引](README.md)。用户已提供持久Engine请求seed PASS输出，确认跳过单独DAPO smoke、将当前Notebook改为正式入口，并指定单次不得超过8小时。已实现控制与采集入口；正式GPU probing尚未运行，不表示已经选出训练题集。
+返回[文档索引](README.md)。用户已提供持久Engine请求seed PASS输出，确认跳过单独DAPO smoke、将当前Notebook改为正式入口，并指定单次不得超过8小时。正式GPU probing现已完成，选定数据已下载并验收；后续训练准备见[训练路线](training_route.md)。当前Notebook仍只执行probing，不执行Noise Head训练。
+
+## 当前完成状态（2026-10-14）
+
+用户提供的运行结果及本地`selected/selection_manifest.json`确认320题终态、4608次rollout；13道train保留、80道validation完整保留。13道train对应21条轨迹、526个latent steps。6个Parquet输出hash与manifest一致，362对features/trajectory JSON齐全；训练加载时必须按train_selected过滤，不将全部保留轨迹用作训练。完整本地验收与本次轻量复核的范围见训练路线。
+
+已有完整selected可供离线warm-start，不需要重跑probing；只有继续原probing采集才需要下述完整目录恢复契约。后续Kaggle训练仍需要用户提供selected的实际挂载/恢复路径。
 
 ## 运行方式
 

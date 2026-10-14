@@ -4,7 +4,7 @@ type: design
 status: active
 title: 本地 Smoke 与 Kaggle Notebook 实现计划
 created: 2026-09-30
-updated: 2026-10-05
+updated: 2026-10-14
 related_docs:
   - DOC-SPEC-001
   - DOC-MINFIX-001
@@ -37,7 +37,7 @@ planned_code:
 
 ## 1. 当前边界与前置条件
 
-Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md)。2026-10-05 K0和持久Engine请求seed已获用户GPU PASS输出；[正式probing入口](kaggle_probing.md)已实现，单次最多8小时，正式数据采集与Noise Head训练尚未执行。后文早期规模/参数建议以对应最新已批准专题文档为准。
+Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md)。K0和持久Engine请求seed已获用户GPU PASS输出；[正式probing](kaggle_probing.md)已完成，本地selected数据已验收（13 train / 80 validation），Noise Head训练待实现。2026-10-14当前实验回到[两阶段训练路线](training_route.md)，不使用归档的无监督/Test-Time设计。后文早期规模/参数建议以对应最新已批准专题文档为准；Task 4旧采集规模不要求重做probing。
 
 | 阶段 | 做什么 | 可证明什么 |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ Task 1 本地 sampler smoke 已实现，见 [命令与验收](local_cpu_smoke.md
 ## 2. 全局约束与设计决定
 
 冻结 backbone：eval 模式、所有 requires_grad=False、forward 使用 no_grad；head 输入 detach。optimizer 只含 hidden projection 和 MLP 参数。
-Noise Head：d→64 trainable projection，拼接六维统计→70→128→32→1，GELU，sigmoid；scale=0+(1-0)*ratio。固定 K=10，Gumbel temperature=1.0，one-sided=True。Stage B 已于2026-10-02确认纳入首版；本段单输出sigmoid接口只描述Stage A，RL随机动作参数化需讨论后扩展。
+Noise Head候选结构：d→64 trainable projection，拼接六维统计→70→128→32→1，GELU，sigmoid；用户尚未最终确认输入/层宽，hidden-only也仅是讨论方案。已确认scale范围`[0,2]`，候选映射为`scale=2*ratio`；固定K=10、Gumbel temperature=1.0，沿用作者配置one-sided=False。Stage B已确认纳入首版；单输出sigmoid接口只描述Stage A候选，RL随机动作参数化需讨论后扩展。
 固定 baseline 和 adaptive 使用同 checkpoint、prompt、top-p、temperature、response cap、verifier、split、seeds、rollout 数；只改变 scale policy。
 不得自动量化、启用无 hidden fallback、改成每题单 scale 或改变实验预算。
 环境/网络/设备/OOM 错误立即停止实验并写失败记录；不得根据 Spec 的降级序列自动重试。项目代码错误可修复，三次失败停止并指出可疑假设。
@@ -145,7 +145,7 @@ checkpoint.save/load 保存 head state、architecture、feature schema、upstrea
 
 - [ ] 测试 sample-level 平均 correctness argmax、平手选择小 scale（validation baseline 同样按平均 Pass@1 最大、小 scale 平手规则）；同题各轨迹 step 共享标签；重复/缺失 rollout 不能默认为完整，本轮all-wrong/all-correct题按 [最新数据筛选规则](dataset_construction_design.md) 移出train选择；7次仍不敏感题记录problem_id，筛选记录保留。
 - [ ] Engineering：32 train/32 validation/32 test，seeds=[0]，候选[0,.25,.5,.75,1]，每scale 2 rollout；训练采集共320 rollout。固定 split manifest；2026-10-02 用户要求不再去重、不要求原题映射，按 [数据构建设计](dataset_construction_design.md) 替代原 parent_problem_id 分组要求。此处规模、scale与rollout数仍是待确认建议。
-- [ ] 实现 no_grad 采集 raw hidden/统计/正确性/时长/invalid；train 拟合 oracle，validation 用于选择 fixed c* 与 head checkpoint，test 不参与选择。head Adam lr=.001、batch=64、epochs=20、SmoothL1；按题等权避免长轨迹主导。
+- [ ] 复用已完成的probing raw hidden/统计/正确性，不重新采集；train拟合oracle，validation用于选择fixed c*与head checkpoint，test不参与选择。Stage A Adam lr=3e-4已确认；batch=64、epochs=20、SmoothL1和按题等权仍是待最终确认的建议。
 - [ ] 每25样本写 progress.json/results_partial.parquet/hidden shards；训练另写 noise_head_latest.pt，包含 optimizer/epoch/RNG。恢复验证 model/split/feature/config manifest，原子写文件，row key 去重；测试中断恢复与不中断结果一致。
 - [ ] K0 通过后执行真实 Stage A；每 epoch 在独立 validation oracle 记录上计算按题等权 SmoothL1，best 按最小 validation loss 保存，平手保留更早 checkpoint；不在每 epoch 额外运行模型；最后用锁定 best head 做 validation 推理核验。论文说明 sample-level oracle 不代表真正 step-optimal policy。
 
