@@ -24,6 +24,8 @@ backbone两阶段始终冻结；不进行backbone反向传播，不训练LoRA，
 各步骤可以使用不同scale；“先大后小”只是待观察的假设，不作为强制目标或标签。
 题目级scale标签用于初始化，不声称它监督了逐step最优动作。
 输出 scale 范围已确认采用 `[0,2]`；Stage A 使用 Adam，学习率已确认 `3e-4`，覆盖旧计划的 `.001` 建议。该学习率不自动用于 Stage B。
+2026-10-14 用户确认head输入为当前clean hidden加6个统计特征，不采用hidden-only。输入来源已定；原方案中hidden投影64维与后续MLP层宽尚未单独最终确认，不把“直接输入”推定为已批准某种内部投影或拼接位置。
+用户确认Stage A其余提议：SmoothL1、batch size 64、20 epochs、按题等权、按最小validation loss保存best checkpoint。此处每题等权要求先平均同题的训练损失，再在题之间平均，避免长轨迹或多轨迹题主导。best选择使用离线validation标签，不在validation上更新参数。
 正式评估锁定训练完成的 head；validation/test 不进行参数更新，不使用轨迹距离奖励、聚类奖励或逐题 Test-Time 适应。
 
 ## 2. 共享题目、独立轨迹
@@ -55,8 +57,7 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 
 | 待确定内容 | 当前边界 |
 | --- | --- |
-| head 输入与结构 | 原方案为2048维clean hidden投影64维，加6个统计量，MLP 70→128→32→1；用户后来讨论过hidden-only，最终输入与层宽尚未确认。暂停无监督分支不自动批准任何一种输入方案 |
-| Stage A 其余超参数 | SmoothL1、batch64、20 epochs、按题等权、最小validation loss保存best是已提出的建议，尚未最终确认；输出范围和Adam学习率已单独确认 |
+| head 内部结构 | 输入已确认hidden＋6统计量；原候选为2048维hidden投影64维后拼接，MLP 70→128→32→1。内部投影和层宽仍待最终确定 |
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
 | warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
 | RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
@@ -64,6 +65,14 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；生成设置沿用作者：GSM8K-Aug max_new_tokens=128，DAPO=4096；validation分类保留与最佳scale轨迹复用已确认；模型rollout根seed=12345逐轨迹派生、作者答案判定与invalid/截断独立标记已确认 |
 
 本轮只记录批准的路线；不因确认路线就自动选择上述参数、下载安装依赖或启动实验。
+
+### Gumbel噪声与head动作分布的区别
+
+作者原始Gumbel噪声机制继续沿用，无需重新选择噪声类型。当前代码为标准Gumbel采样、裁剪到`[-1.5,3]`、乘scale，再加到logits上。这里随机的是噪声，scale可以由head确定性输出；轨迹仍然随机。
+
+原Spec另提议在Stage B令head输出一个scale策略的参数，先采样scale，再使用作者Gumbel噪声。例如`a~Beta(alpha,beta), scale=2*a`是候选而非已采用配置。该策略下score-function更新使用`log pi_theta(scale|features)`，与作者sampler返回的Gumbel噪声相关数值不是同一个概率。
+
+随机scale不是所有RL方法的必然要求。若保留确定性scale，需要另行建立对head有效的梯度估计；不能因生成轨迹有随机性就将标准Gumbel的log probability直接用于更新head。作者实际路径还有裁剪、top-K选择及scale=0，直接使用普通连续Gumbel密度不能视为已验证的正确head梯度。当前仅澄清概念，不新增动作分布或替换训练算法。
 
 ## 6. 当前数据与实验准备状态（2026-10-14）
 
@@ -77,8 +86,8 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | --- | --- | --- |
 | backbone与推理环境 | 真实GRPO 1B、T4单GPU的K0及请求seed检查已通过，正式probing完成 | 后续沿用同一模型身份和作者生成配置；训练模块集成后仍需adaptive GPU smoke |
 | 离线输入 | selected本地完整；原始题库和指定测试集已有 | 提供selected在Kaggle上的实际挂载/恢复路径；无需重新probing或额外下载模型 |
-| head及Stage A | 尚无features/noise_head/controller/checkpoint实现或训练CLI | 确认输入/结构及剩余训练参数，完成数据加载、训练、保存恢复和CPU验收 |
+| head及Stage A | 输入与Stage A超参数已确认；训练模块和CLI尚未实现 | 确定内部结构及Stage B衔接，完成数据加载、训练、保存恢复和CPU验收 |
 | Stage B | 正确性奖励与冻结范围已定，随机策略/训练代码未实现 | 确认随机动作、warm-start衔接、每题采样量、更新次数/学习率及预算；实现当前策略rollout和head梯度更新 |
 | 最终对比 | 两种方法与validation/test隔离已定 | 实现validation选择、固定预算配对评估、结果导出，确认seed和指标 |
 
-所有单次Kaggle实验不超过8小时；离线训练、RL和评估的具体预算尚未确定。当前Notebook仍是probing入口，不是训练Notebook。下一工作单元应先锁定head输入/结构，再给出Stage A/B衔接与最小训练实施计划；当前不运行实验。
+所有单次Kaggle实验不超过8小时；Stage A已确认20 epochs，RL和评估的具体预算尚未确定。当前Notebook仍是probing入口，不是训练Notebook。下一工作单元应先明确head动作及Stage A/B衔接，再锁定内部结构和最小训练实施计划；当前不运行实验。
