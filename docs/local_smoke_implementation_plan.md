@@ -4,7 +4,7 @@ type: design
 status: active
 title: 本地 Smoke 与 Kaggle Notebook 实现计划
 created: 2026-09-30
-updated: 2026-10-14
+updated: 2026-10-15
 related_docs:
   - DOC-SPEC-001
   - DOC-MINFIX-001
@@ -29,9 +29,11 @@ planned_code:
 
 **Architecture:** 一个纯 PyTorch adaptive_noise 包用于 CPU 与 CUDA；作者固定版本提供实际 latent inference。主项目维护可核验的源码补丁，不直接把作者整个 CUDA/verl 依赖栈安装到本地。Notebook 仅调用同一组 CLI，负责资源探测、输入挂载和阶段门禁。
 
-**Tech Stack:** 本地现有 Python/PyTorch/pytest；Kaggle 单 GPU 自定义 SGLang、离线训练用 PyTorch、结果用 JSONL/Parquet。新增依赖在实施时明确版本与用途，不自动安装。
+**Tech Stack:** 本地现有 Python/PyTorch/pytest；Kaggle 自定义 SGLang，已完成单卡smoke/probing，后续RL采样已确认T4×2各自tp=1的双模型布局；离线训练用 PyTorch、结果用 JSONL/Parquet。新增依赖在实施时明确版本与用途，不自动安装。
 
 当前训练路线按 [两阶段训练与共享题集](training_route.md)：基础筛选即可，两阶段共享train题目，RL独立on-policy采样，validation/test隔离；不要求同prefix分支搜索。
+
+2026-10-15用户仅确认四项Stage B设置：双卡各一个完整模型、warm-start初始化逐状态scale均值、每题每轮8条新轨迹、RL学习率3e-5。Beta/浓度、更新频率、baseline与总预算仍待定，双卡控制尚未实现；后文早期单卡限制不能覆盖这一更新，已完成probing无需重跑。
 
 **Spec:** [任务规范](AdaNoise_LGRPO_Codex_Kaggle_Spec.md)；[当前 minfix 审计](minfix_submodule_update.md)。返回 [文档索引](README.md)。
 

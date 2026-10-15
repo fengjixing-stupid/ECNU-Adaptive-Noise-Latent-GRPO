@@ -4,7 +4,7 @@ type: design
 status: active
 title: 两阶段 Noise Head 训练与共享题集
 created: 2026-10-02
-updated: 2026-10-14
+updated: 2026-10-15
 related_docs:
   - DOC-SPEC-001
   - DOC-PLAN-001
@@ -28,6 +28,19 @@ backbone两阶段始终冻结；不进行backbone反向传播，不训练LoRA，
 用户讨论异质特征的尺度、冗余和容量后，决定当前继续采用拼接作为融合方式。拼接不要求两组特征原本属于同一语义空间；是否有效仍需验证。归一化、内部投影和层宽尚未最终确定，不自动增加双分支编码器或复杂融合模块。
 用户确认Stage A其余提议：SmoothL1、batch size 64、20 epochs、按题等权、按最小validation loss保存best checkpoint。此处每题等权要求先平均同题的训练损失，再在题之间平均，避免长轨迹或多轨迹题主导。best选择使用离线validation标签，不在validation上更新参数。
 正式评估锁定训练完成的 head；validation/test 不进行参数更新，不使用轨迹距离奖励、聚类奖励或逐题 Test-Time 适应。
+
+### 2026-10-15 已确认的四项Stage B设置
+
+| 项目 | 已确认内容 |
+| --- | --- |
+| 双卡布局 | Kaggle T4×2，每张卡一个完整冻结1B模型，独立Engine、各自tp=1，并行采样；两个worker使用同一head版本，汇总后统一更新并同步 |
+| warm-start衔接 | 用warm-start对当前状态的预测初始化RL策略在该状态的scale均值；保留逐状态差异，不取全局标签平均值作为初始化中心 |
+| 采样量 | 每题每轮8条新轨迹，双卡各4条；沿用同一轮采样期间的策略版本 |
+| RL学习率 | `3e-5`，与Stage A的`3e-4`区分 |
+
+本次“先接受这四项”不等于接受整套上一轮建议。Beta分布及浓度20、基础强度sigma_0=1、端点处理、Adam作为RL优化器、每4–5题更新一次、每批单次更新、10轮/30次更新/1040轨迹预算、梯度裁剪1.0、leave-one-out baseline均仍为待讨论建议。输入融合与Stage A此前批准项继续有效。
+
+双卡布局是后续训练采集目标，尚未实现或GPU验收；已有K0、请求seed及probing证据为单Engine/GPU0。Stage A离线训练无需因此启用双卡，已完成probing不重跑。单次Kaggle实验最多8小时的约束继续有效。
 
 ## 2. 共享题目、独立轨迹
 
@@ -60,8 +73,8 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | --- | --- |
 | head 内部结构 | 输入已确认hidden＋6统计量；原候选为2048维hidden投影64维后拼接，MLP 70→128→32→1。内部投影和层宽仍待最终确定 |
 | 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
-| warm-start到RL的衔接 | RL动作参数化及其初始化、确定性评估输出规则需要明确 |
-| RL更新与稳定性 | 更新周期、reward baseline、学习率、正则项和预算尚未确定 |
+| warm-start到RL的衔接 | 已确认按状态初始化scale均值；分布参数化、端点处理、基础强度与倍率的映射、确定性评估输出规则待定 |
+| RL更新与稳定性 | 每题每轮8条、学习率3e-5已确认；优化器、更新周期、reward baseline、正则项和总预算待定 |
 | 正式评估 | validation选择固定scale与head，锁定后评估两种方法；每题rollout数、重复seed数、最终汇总指标和配对预算仍需确定 |
 | 数据与模型 | 题源与路径已提供；子池320题、两来源各160、train/validation=240:80；probing scales/M和筛选规则已确定；数据master_seed=42，三路派生负责两个来源抽样与切分；生成设置沿用作者：GSM8K-Aug max_new_tokens=128，DAPO=4096；validation分类保留与最佳scale轨迹复用已确认；模型rollout根seed=12345逐轨迹派生、作者答案判定与invalid/截断独立标记已确认 |
 
@@ -87,10 +100,10 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 
 | 部分 | 当前状态 | 开展实验前的工作 |
 | --- | --- | --- |
-| backbone与推理环境 | 真实GRPO 1B、T4单GPU的K0及请求seed检查已通过，正式probing完成 | 后续沿用同一模型身份和作者生成配置；训练模块集成后仍需adaptive GPU smoke |
+| backbone与推理环境 | 真实GRPO 1B、T4单GPU的K0及请求seed检查已通过，正式probing完成；后续双卡独立模型布局已确认 | 增加双worker并行采样、版本同步和seed隔离；训练模块集成后验证adaptive GPU smoke |
 | 离线输入 | selected本地完整；原始题库和指定测试集已有 | 提供selected在Kaggle上的实际挂载/恢复路径；无需重新probing或额外下载模型 |
 | head及Stage A | 输入与Stage A超参数已确认；训练模块和CLI尚未实现 | 确定内部结构及Stage B衔接，完成数据加载、训练、保存恢复和CPU验收 |
-| Stage B | 正确性奖励与冻结范围已定，随机策略/训练代码未实现 | 确认随机动作、warm-start衔接、每题采样量、更新次数/学习率及预算；实现当前策略rollout和head梯度更新 |
+| Stage B | 正确性奖励、冻结范围和上述四项设置已定，随机策略/训练代码未实现 | 确认分布参数化、更新周期、baseline及总预算；实现当前策略rollout和head梯度更新 |
 | 最终对比 | 两种方法与validation/test隔离已定 | 实现validation选择、固定预算配对评估、结果导出，确认seed和指标 |
 
 所有单次Kaggle实验不超过8小时；Stage A已确认20 epochs，RL和评估的具体预算尚未确定。当前Notebook仍是probing入口，不是训练Notebook。下一工作单元应先明确head动作及Stage A/B衔接，再锁定内部结构和最小训练实施计划；当前不运行实验。

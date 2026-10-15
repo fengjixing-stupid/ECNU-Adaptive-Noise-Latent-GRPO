@@ -1,7 +1,7 @@
 # AdaNoise-LGRPO 项目入口
 
-项目目标：在作者已训练的 1B Latent-GRPO checkpoint 上冻结 backbone，仅训练 Noise Head；主要实验使用 Kaggle 单 GPU Notebook。
-更新：2026-10-14；当前阶段：CPU sampler、K0及请求seed验收已完成；正式probing完成，本地selected数据已验收（13 train / 80 validation）；Noise Head与两阶段训练待实现，单次Kaggle实验最多8小时。
+项目目标：在作者已训练的 1B Latent-GRPO checkpoint 上冻结 backbone，仅训练 Noise Head；使用 Kaggle Notebook，后续RL采样采用T4×2、每卡一个完整模型（各自tp=1）。
+更新：2026-10-15；当前阶段：CPU sampler、单卡K0及请求seed验收已完成；正式probing完成，本地selected数据已验收（13 train / 80 validation）；Noise Head、双卡协调与两阶段训练待实现，单次Kaggle实验最多8小时。
 
 ## 读取路线
 
