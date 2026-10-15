@@ -33,7 +33,7 @@ planned_code:
 
 当前训练路线按 [两阶段训练与共享题集](training_route.md)：基础筛选即可，两阶段共享train题目，RL独立on-policy采样，validation/test隔离；不要求同prefix分支搜索。
 
-2026-10-15用户确认四项Stage B设置：双卡各一个完整模型、warm-start初始化逐状态scale均值、每题每轮8条新轨迹、RL学习率3e-5；随后确认Beta动作分布及固定浓度20，以及每轮打乱13题后按4＋4＋5分批、每批采样后仅更新一次head并同步双卡（每轮104条新轨迹、3次更新）。RL优化器已另确认采用Adam，学习率沿用3e-5。端点处理、baseline与总预算仍待定，双卡控制尚未实现；后文早期单卡限制不能覆盖这一更新，已完成probing无需重跑。
+2026-10-15用户确认四项Stage B设置：双卡各一个完整模型、warm-start初始化逐状态scale均值、每题每轮8条新轨迹、RL学习率3e-5；随后确认Beta动作分布及固定浓度20，以及每轮打乱13题后按4＋4＋5分批、每批采样后仅更新一次head并同步双卡（每轮104条新轨迹、3次更新）。RL优化器已另确认采用Adam，学习率沿用3e-5；首轮训练预算已确认10轮/30次更新/1040条新训练轨迹，单次运行仍最多8小时。端点处理、baseline和评估预算仍待定，双卡控制尚未实现；后文早期单卡限制不能覆盖这一更新，已完成probing无需重跑。
 
 **Spec:** [任务规范](AdaNoise_LGRPO_Codex_Kaggle_Spec.md)；[当前 minfix 审计](minfix_submodule_update.md)。返回 [文档索引](README.md)。
 
