@@ -38,7 +38,9 @@ backbone两阶段始终冻结；不进行backbone反向传播，不训练LoRA，
 | 采样量 | 每题每轮8条新轨迹，双卡各4条；沿用同一轮采样期间的策略版本 |
 | RL学习率 | `3e-5`，与Stage A的`3e-4`区分 |
 
-本次“先接受这四项”不等于接受整套上一轮建议。Beta分布及浓度20、基础强度sigma_0=1、端点处理、Adam作为RL优化器、每4–5题更新一次、每批单次更新、10轮/30次更新/1040轨迹预算、梯度裁剪1.0、leave-one-out baseline均仍为待讨论建议。输入融合与Stage A此前批准项继续有效。
+用户随后另外确认Beta动作分布及固定浓度`kappa=20`。令归一化均值为`mu_t`，参数为`alpha_t=20*mu_t`、`beta_t=20*(1-mu_t)`；浓度不参与训练，RL更新head所表示的逐状态均值。初始化均值来自warm-start；不能把warm-start head永久冻结为RL均值。`mu_t`必须位于`(0,1)`，端点附近的具体数值处理仍需确定。
+
+基础强度sigma_0=1、端点处理、Adam作为RL优化器、每4–5题更新一次、每批单次更新、10轮/30次更新/1040轨迹预算、梯度裁剪1.0、leave-one-out baseline均仍为待讨论建议。输入融合与Stage A此前批准项继续有效。
 
 双卡布局是后续训练采集目标，尚未实现或GPU验收；已有K0、请求seed及probing证据为单Engine/GPU0。Stage A离线训练无需因此启用双卡，已完成probing不重跑。单次Kaggle实验最多8小时的约束继续有效。
 
@@ -72,7 +74,7 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 | 待确定内容 | 当前边界 |
 | --- | --- |
 | head 内部结构 | 输入已确认hidden＋6统计量；原候选为2048维hidden投影64维后拼接，MLP 70→128→32→1。内部投影和层宽仍待最终确定 |
-| 随机动作分布 | 原Spec的Beta是候选，不是已选定方案；当前确定性sigmoid不能直接套用score-function policy gradient |
+| 动作参数化与数值处理 | Beta及固定浓度20已确认；归一化均值的内部参数化和端点处理仍需确定，保证alpha/beta严格为正 |
 | warm-start到RL的衔接 | 已确认按状态初始化scale均值；分布参数化、端点处理、基础强度与倍率的映射、确定性评估输出规则待定 |
 | RL更新与稳定性 | 每题每轮8条、学习率3e-5已确认；优化器、更新周期、reward baseline、正则项和总预算待定 |
 | 正式评估 | validation选择固定scale与head，锁定后评估两种方法；每题rollout数、重复seed数、最终汇总指标和配对预算仍需确定 |
@@ -84,11 +86,11 @@ R=1仅代表最终答案经统一规则判定正确；无法判定正确记0，�
 
 作者原始Gumbel噪声机制继续沿用，无需重新选择噪声类型。当前代码为标准Gumbel采样、裁剪到`[-1.5,3]`、乘scale，再加到logits上。这里随机的是噪声，scale可以由head确定性输出；轨迹仍然随机。
 
-原Spec另提议在Stage B令head输出一个scale策略的参数，先采样scale，再使用作者Gumbel噪声。例如`a~Beta(alpha,beta), scale=2*a`是候选而非已采用配置。该策略下score-function更新使用`log pi_theta(scale|features)`，与作者sampler返回的Gumbel噪声相关数值不是同一个概率。
+原Spec在Stage B另提议一个scale策略，先采样scale，再使用作者Gumbel噪声。2026-10-15用户已选择Beta且固定浓度20；`a~Beta(alpha,beta)`，按已确认的scale范围映射（归一化动作对应`scale=2*a`），与基础强度倍率记号的最终衔接仍待明确。该策略下score-function更新使用动作的`log pi_theta(a|features)`（或正确变换后的scale密度），与作者sampler返回的Gumbel噪声相关数值不是同一个概率。
 
-这里的“原Spec”指本项目设计文档，不是Latent-GRPO论文。论文第2.2节式(2)–(5)及第3.4节式(22)–(23)使用latent perturbation/显式token的策略目标更新模型；没有提出Beta scale策略。本项目额外将每步scale作为head动作，使最终正确性奖励可通过`(R-b)*sum_t grad log pi_head(a_t|x_t)`更新head，而不需要对奖励或冻结的SGLang生成过程反向传播。每步可共用终局奖励，这只是有噪声的轨迹级归因，不证明某个scale的单次选择就是正确原因。Beta提供有界连续动作参数化，但不是唯一可行方案，也尚未获用户采用。论文依据：[Latent-GRPO](https://arxiv.org/html/2604.27998v1)。
+这里的“原Spec”指本项目设计文档，不是Latent-GRPO论文。论文第2.2节式(2)–(5)及第3.4节式(22)–(23)使用latent perturbation/显式token的策略目标更新模型；没有提出Beta scale策略。本项目额外将每步scale作为head动作，使最终正确性奖励可通过`(R-b)*sum_t grad log pi_head(a_t|x_t)`更新head，而不需要对奖励或冻结的SGLang生成过程反向传播。每步可共用终局奖励，这只是有噪声的轨迹级归因，不证明某个scale的单次选择就是正确原因。Beta提供有界连续动作参数化，现已获用户采用。论文依据：[Latent-GRPO](https://arxiv.org/html/2604.27998v1)。
 
-随机scale不是所有RL方法的必然要求。若保留确定性scale，需要另行建立对head有效的梯度估计；不能因生成轨迹有随机性就将标准Gumbel的log probability直接用于更新head。作者实际路径还有裁剪、top-K选择及scale=0，直接使用普通连续Gumbel密度不能视为已验证的正确head梯度。当前仅澄清概念，不新增动作分布或替换训练算法。
+随机scale不是所有RL方法的必然要求，但当前已选择Beta动作策略。若未来改回确定性scale，需要另行建立对head有效的梯度估计；不能因生成轨迹有随机性就将标准Gumbel的log probability直接用于更新head。作者实际路径还有裁剪、top-K选择及scale=0，直接使用普通连续Gumbel密度不能视为已验证的正确head梯度。
 
 ## 6. 当前数据与实验准备状态（2026-10-14）
 
