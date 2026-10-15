@@ -8,7 +8,7 @@ updated: 2026-10-15
 ---
 # AdaNoise-LGRPO：面向 Kaggle 的 Noise Head 自适应 Gumbel 探索实现规范
 
-> 2026-10-15 用户确认四项Stage B设置：Kaggle T4×2各一个完整模型（各自tp=1）、warm-start初始化逐状态scale均值、每题每轮8条新轨迹、RL学习率3e-5；随后确认Beta动作分布及固定浓度20，以及每轮打乱13题后按4＋4＋5分批、每批采样后仅更新一次head并同步双卡（每轮104条新轨迹、3次更新）。以上覆盖本文冲突的旧单卡限制和参数建议。端点处理、优化器、baseline、基础强度与总预算仍待定；双卡运行尚未验收，详见[训练路线](training_route.md)。
+> 2026-10-15 用户确认四项Stage B设置：Kaggle T4×2各一个完整模型（各自tp=1）、warm-start初始化逐状态scale均值、每题每轮8条新轨迹、RL学习率3e-5；随后确认Beta动作分布及固定浓度20，以及每轮打乱13题后按4＋4＋5分批、每批采样后仅更新一次head并同步双卡（每轮104条新轨迹、3次更新）。RL优化器已另确认采用Adam，学习率沿用3e-5。以上覆盖本文冲突的旧单卡限制和参数建议。端点处理、baseline、基础强度与总预算仍待定；双卡运行尚未验收，详见[训练路线](training_route.md)。
 
 > 2026-10-14 当前状态与覆盖规则：probing已完成，本地选定数据13 train / 80 validation已验收；用户已确认scale范围`[0,2]`、hidden＋6统计量输入、Stage A Adam学习率`3e-4`以及SmoothL1/batch64/20epochs/按题等权/最小validation loss选best，覆盖本文冲突建议。无监督轨迹奖励/Test-Time适应已归档暂停，当前使用监督warm-start＋真实正确性奖励head-only RL，评估时不更新参数。内部结构和RL参数以[训练路线及待补项](training_route.md)为准，本文示例不能视为全部已批准配置。
 
