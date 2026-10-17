@@ -1,7 +1,9 @@
 # 正式文档索引
 
-更新：2026-10-14；当前阶段：正式probing完成，13 train / 80 validation的本地selected数据已验收；Noise Head与Stage A/B训练待实现，单次Kaggle实验最多8小时；无监督/Test-Time分支暂停。
+更新：2026-10-17；当前阶段：正式probing完成，13 train / 80 validation的本地selected数据已验收；Noise Head与Stage A/B训练待实现，单次Kaggle实验最多8小时；无监督/Test-Time分支暂停。
 返回 [项目入口](../AGENTS.md)。
+
+[实验设计、当前进度、真实数据示例与统计分析](experiment_design_and_statistical_analysis.md)：2026-10-17详细汇总，区分已确认设置、待定项与统计改进建议；包含现行筛选规则的理论反例及可选改造。
 
 | 阅读顺序 | 文档 | 用途 |
 | --- | --- | --- |
